@@ -1,0 +1,7 @@
+{
+  "name": "Node.js ImageClassifier",
+  "description": "An image classifier Node.js app using Express",
+  "repository": "https://github.com/engageaffli/imageClassifier",
+  "logo": "https://node-js-sample.herokuapp.com/node.png",
+  "keywords": ["node", "express", "static"]
+}
