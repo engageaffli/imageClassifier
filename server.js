@@ -3,7 +3,6 @@ Image Classifier using TensorFlow
 This classifier uses MobileNet and Coco-ssd pre-trained Models 
 Author: engageub
 */
-
 const throng = require('throng')
 
 // Defines the number of concurrent threads to run. 
@@ -23,10 +22,7 @@ async function start() {
     // Load all the required assets/libraries 
     const express = require('express');
     const bodyParser = require("body-parser");
-    require('@tensorflow/tfjs-backend-cpu');
-    require('@tensorflow/tfjs-backend-webgl');
     const cocoSsd = require('@tensorflow-models/coco-ssd');
-    const tf = require('@tensorflow/tfjs');
     const tfnode = require('@tensorflow/tfjs-node');
     const mobilenet = require('@tensorflow-models/mobilenet');
     const {
@@ -45,13 +41,42 @@ async function start() {
         extended: true
     }));
 
+    const {
+        Client
+    } = require('pg');
+
+    const client = new Client({
+        connectionString: process.env.DATABASE_URL,
+        ssl: {
+            rejectUnauthorized: false
+        }
+    });
+
+
+
+    client.connect();
+
+
+    client.query('CREATE TABLE IF NOT EXISTS images_table ( base64_image TEXT , description VARCHAR(255), CONSTRAINT PK_image PRIMARY KEY (base64_image));', (err, res) => {
+        if (err) throw err;
+        console.log("Table Created");
+    });
+
+
+    client.query('ALTER TABLE images_table DROP constraint IF EXISTS PK_image;', (err, res) => {
+        if (err) throw err;
+
+        client.end();
+    });
+
+
 
     // Get Request to path /ocr uses Tesseract 
     // URL as input
     app.get('/ocr', (req, res) => {
         const image_url = req.query.url;
         const worker = createWorker();
-        (async() => {
+        (async () => {
             await worker.load();
             await worker.loadLanguage('eng');
             await worker.initialize('eng');
@@ -70,7 +95,7 @@ async function start() {
     app.post('/ocr', (req, res) => {
         const image_url = req.body.url;
         const worker = createWorker();
-        (async() => {
+        (async () => {
             await worker.load();
             await worker.loadLanguage('eng');
             await worker.initialize('eng');
@@ -86,7 +111,7 @@ async function start() {
 
     // Get Request to root / uses MobileNet Model to classify the image 
     // URL as input
-    app.get('/', async(req, res) => {
+    app.get('/', async (req, res) => {
         try {
             const result = await fetch(req.query.url);
             const img = await tfnode.node.decodeImage(Buffer.from(await result.arrayBuffer()))
@@ -102,7 +127,7 @@ async function start() {
 
     // Get Request to path /coco uses CocoSSD Model to classify the image
     // URL as input
-    app.get('/coco', async(req, res) => {
+    app.get('/coco', async (req, res) => {
         try {
             const result = await fetch(req.query.url);
             const img = await tfnode.node.decodeImage(Buffer.from(await result.arrayBuffer()))
@@ -118,7 +143,7 @@ async function start() {
 
     // Post request to root / uses MobileNet Model to classify the image 
     // Base64 as Input
-    app.post('/', async(req, res) => {
+    app.post('/', async (req, res) => {
         try {
             const img = await tfnode.node.decodeImage(Buffer.from(req.body.url, 'base64'))
             const predictions = await model.classify(img);
@@ -132,7 +157,7 @@ async function start() {
 
     // Post request to /coco path to get the results using Coco-ssd model
     // Base64 as Input
-    app.post('/coco', async(req, res) => {
+    app.post('/coco', async (req, res) => {
         try {
             const img = await tfnode.node.decodeImage(Buffer.from(req.body.url, 'base64'))
             const predictions = await cocoModel.detect(img);
@@ -144,9 +169,95 @@ async function start() {
         }
     })
 
+    // Post request to retrieve image description from database
+    // Base64 as Input
+    app.post('/getImageData', async (req, res) => {
+        try {
+            const client = new Client({
+                connectionString: process.env.DATABASE_URL,
+                ssl: {
+                    rejectUnauthorized: false
+                }
+            });
+
+            client.connect();
+
+            client.query("select description from images_table where base64_image='" + req.body.url + "' limit 1;", (err, result) => {
+                if (err) throw err;
+                for (let row of result.rows) {
+                    console.log(row.description);
+                    res.send(row.description).end();
+                    break;
+                }
+                if (!result || result.rows.length == 0) {
+                    res.send(" ").end();
+                }
+                client.end();
+            });
+
+        } catch (err) {
+            console.log(err);
+            res.send("Exception occured while processing the request").end();
+        }
+    })
+
+    // Post request to store image data to  database
+    // Base64 as Input
+    app.post('/putImageData', async (req, res) => {
+        try {
+            const client = new Client({
+                connectionString: process.env.DATABASE_URL,
+                ssl: {
+                    rejectUnauthorized: false
+                }
+            });
+
+            client.connect();
+
+            client.query("INSERT INTO images_table(base64_image, description) VALUES('" + req.body.url + "', '" + req.body.description + "');", (err, res) => {
+                if (err) throw err;
+                client.end();
+            });
+
+            res.send("Insert completed").end();
+
+        } catch (err) {
+            console.log(err);
+            res.send("Exception occured while processing the request").end();
+        }
+    })
+
+    // Post request to update image data to  database
+    // Base64 as Input
+    app.post('/updateImageData', async (req, res) => {
+        try {
+
+            const client = new Client({
+                connectionString: process.env.DATABASE_URL,
+                ssl: {
+                    rejectUnauthorized: false
+                }
+            });
+
+            client.connect();
+
+            client.query("UPDATE images_table SET description='" + req.body.description + "' where base64_image='" + req.body.url + "';", (err, res) => {
+                if (err) throw err
+                client.end();
+            });
+            res.send("Update completed").end();
+
+        } catch (err) {
+            console.log(err);
+            res.send("Exception occured while processing the request").end();
+        }
+    })
+
     // App listening port
     app.listen(PORT, () => {
         console.log(`App listening on port ${PORT}`);
         console.log('Press Ctrl+C to quit.');
     });
+
+
 }
