@@ -53,23 +53,20 @@ async function start() {
     });
 
 
-
     client.connect();
-
-
+    
+    // Create table if it does not exist
     client.query('CREATE TABLE IF NOT EXISTS images_table ( base64_image TEXT , description VARCHAR(255), CONSTRAINT PK_image PRIMARY KEY (base64_image));', (err, res) => {
         if (err) throw err;
         console.log("Table Created");
     });
 
-
+    // Remove constraint if present to avoid indexing memory limitation
     client.query('ALTER TABLE images_table DROP constraint IF EXISTS PK_image;', (err, res) => {
         if (err) throw err;
-
-        client.end();
     });
 
-
+    client.end();
 
     // Get Request to path /ocr uses Tesseract 
     // URL as input
