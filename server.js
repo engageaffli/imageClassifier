@@ -57,7 +57,7 @@ async function start() {
     client.connect();
 
 
-    client.query('CREATE TABLE IF NOT EXISTS images_table ( base64_image TEXT , description VARCHAR(255), CONSTRAINT PK_image PRIMARY KEY (base64_image));', (err, res) => {
+    client.query('CREATE TABLE IF NOT EXISTS images_table ( base64_image TEXT , description VARCHAR(1000), CONSTRAINT PK_image PRIMARY KEY (base64_image));', (err, res) => {
         if (err) throw err;
         console.log("Table Created");
     });
