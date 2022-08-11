@@ -185,7 +185,6 @@ async function start() {
             client.query("select description from images_table where base64_image='" + req.body.url + "' limit 1;", (err, result) => {
                 if (err) throw err;
                 for (let row of result.rows) {
-                    console.log(row.description);
                     res.send(row.description).end();
                     break;
                 }
@@ -231,7 +230,6 @@ async function start() {
     // Base64 as Input
     app.post('/updateImageData', async (req, res) => {
         try {
-
             const client = new Client({
                 connectionString: process.env.DATABASE_URL,
                 ssl: {
