@@ -38,8 +38,10 @@ async function start() {
 
     const app = express();
     app.use(bodyParser.urlencoded({
+        limit: '5mb',
         extended: true
     }));
+   
 
     const {
         Client
@@ -57,11 +59,15 @@ async function start() {
     client.connect();
 
 
-    client.query('CREATE TABLE IF NOT EXISTS images_table ( base64_image TEXT , description VARCHAR(1000), CONSTRAINT PK_image PRIMARY KEY (base64_image));', (err, res) => {
+    client.query('CREATE TABLE IF NOT EXISTS images_table ( base64_image TEXT , description VARCHAR(255), CONSTRAINT PK_image PRIMARY KEY (base64_image));', (err, res) => {
         if (err) throw err;
         console.log("Table Created");
     });
 
+ client.query('DELETE FROM images_table a using images_table b where a.description < b.description AND a.base64_image=b.base64_image', (err, res) => {
+        if (err) throw err;
+        console.log("Duplicates Deleted");
+    });
 
     client.query('ALTER TABLE images_table DROP constraint IF EXISTS PK_image;', (err, res) => {
         if (err) throw err;
@@ -185,6 +191,7 @@ async function start() {
             client.query("select description from images_table where base64_image='" + req.body.url + "' limit 1;", (err, result) => {
                 if (err) throw err;
                 for (let row of result.rows) {
+               //     console.log(row.description);
                     res.send(row.description).end();
                     break;
                 }
@@ -230,6 +237,7 @@ async function start() {
     // Base64 as Input
     app.post('/updateImageData', async (req, res) => {
         try {
+
             const client = new Client({
                 connectionString: process.env.DATABASE_URL,
                 ssl: {
@@ -240,7 +248,7 @@ async function start() {
             client.connect();
 
             client.query("UPDATE images_table SET description='" + req.body.description + "' where base64_image='" + req.body.url + "';", (err, res) => {
-                if (err) throw err
+                if (err) throw err;
                 client.end();
             });
             res.send("Update completed").end();
@@ -251,11 +259,72 @@ async function start() {
         }
     })
 
+
+    // Get List of categories stored 
+    app.get('/getCategories', async (req, res) => {
+        try {
+           var output = [];
+
+            const client = new Client({
+                connectionString: process.env.DATABASE_URL,
+                ssl: {
+                    rejectUnauthorized: false
+                }
+            });
+
+            client.connect();
+
+            client.query("SELECT DISTINCT description from images_table where (description LIKE '%Please%' OR description LIKE '%select%' OR description LIKE '%click%');", (err, result) => {
+                if (err) throw err;
+                if (!result || result.rows.length == 0) {
+                    res.send(" ").end();
+                } else {
+                    res.send(result.rows).end();
+                }
+
+                client.end();
+            });
+
+        } catch (err) {
+            console.log(err);
+            res.send("Exception occured while processing the request").end();
+        }
+    })
+
+    // Delete Images based on description 
+    app.get('/deleteImages', async (req, res) => {
+        try {
+           var output = [];
+
+            const client = new Client({
+                connectionString: process.env.DATABASE_URL,
+                ssl: {
+                    rejectUnauthorized: false
+                }
+            });
+
+            client.connect();
+
+            client.query("DELETE from images_table where description='" + req.query.description + "';", (err, result) => {
+                if (err) throw err;
+                res.send("Images deleted for description " + req.query.description).end();
+
+                client.end();
+            });
+
+        } catch (err) {
+            console.log(err);
+            res.send("Exception occured while processing the request").end();
+        }
+    })
+
+
     // App listening port
     app.listen(PORT, () => {
         console.log(`App listening on port ${PORT}`);
         console.log('Press Ctrl+C to quit.');
     });
+
 
 
 }
