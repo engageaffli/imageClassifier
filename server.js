@@ -35,6 +35,7 @@ const mobilenet = require('@tensorflow-models/mobilenet');
 const knnClassifier = require('@tensorflow-models/knn-classifier');
 const axios = require('axios');
 const base64 = require('base-64');
+const https = require('https');
 
 
 const {
@@ -169,7 +170,6 @@ async function fetchData(url) {
     });
 }
 
-const https = require('https')
 
 async function postData(url, data) {
 
@@ -283,7 +283,7 @@ async function uploadModelsToDatabase(url) {
 
 //Update every hour for any new models in remote url
 // setInterval(function(){
-uploadModelsToDatabase("https://raw.githubusercontent.com/engageaffli/Models/main/models.json");
+uploadModelsToDatabase('https://raw.githubusercontent.com/engageaffli/Models/main/models.json');
 //  },3600000);
 
 
