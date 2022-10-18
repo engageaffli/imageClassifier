@@ -154,6 +154,7 @@ async function fetchData(url) {
 
         }).on("error", (error) => {
             console.error(error.message);
+            reject();
         });
 
     });
@@ -241,8 +242,12 @@ async function uploadModelsToDatabase(url) {
         if (!dbModels.has(remoteModels[i])) {
             //Fetch the model from remote url
             let remoteModelUrl = json[remoteModels[i]];
+            console.log(remoteModelUrl);
             let remoteModelJson = await fetchData(remoteModelUrl);
             remoteModelJson = remoteModelJson.trim();
+            if(!remoteModelJson){
+                continue;   
+            }
             remoteModelJson = remoteModelJson.replaceAll('""', '"');
 
             //Store the data to database
@@ -259,13 +264,14 @@ async function uploadModelsToDatabase(url) {
                 client.query("INSERT INTO models_table(description, model) VALUES('" + remoteModels[i] + "', '" + remoteModelJson + "');", (err, result) => {
                     if (err) throw err;
                     client.end();
-                    resolve(result);
+                    resolve();
                 });
             })
 
         }
 
     }
+    console.log("Models uploaded");
 
 }
 
