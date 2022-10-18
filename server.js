@@ -159,6 +159,7 @@ async function fetchData(url) {
             });
 
             res.on("end", () => {
+                console.log(body);
 
                 return resolve(body);
             });
@@ -283,7 +284,7 @@ async function uploadModelsToDatabase(url) {
 
 //Update every hour for any new models in remote url
 // setInterval(function(){
-uploadModelsToDatabase('https://raw.githubusercontent.com/engageaffli/Models/main/models.json');
+uploadModelsToDatabase("https://raw.githubusercontent.com/engageaffli/Models/main/models.json");
 //  },3600000);
 
 
