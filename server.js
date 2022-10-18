@@ -159,7 +159,7 @@ async function fetchData(url) {
             });
 
             res.on("end", () => {
-                console.log(body);
+               // console.log(body);
 
                 return resolve(body);
             });
