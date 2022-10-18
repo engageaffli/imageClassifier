@@ -59,7 +59,6 @@ async function load() {
     tesseractLoaded = true;
     model = await mobilenet.load();
 
-    setInterval(async function() {
         tesseractLoaded = false;
         await worker.terminate();
 
@@ -71,18 +70,7 @@ async function load() {
         await worker.loadLanguage('eng');
         await worker.initialize('eng');
         tesseractLoaded = true;
-        try {
-            if (global.gc) {
-                global.gc();
-            }
-        } catch (err) {
-
-
-        }
-
-
-
-    }, 600000)
+  
 
 
 }
