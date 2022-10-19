@@ -350,6 +350,10 @@ app.post('/ocr', async (req, res) => {
     // URL as input
     app.get('/', async (req, res) => {
         try {
+            if(!req.query.url){
+                res.send("Invalid Input").end();
+                return;
+            }
             const result = await fetchData(req.query.url);
             const img = await tfnode.node.decodeImage(Buffer.from(await result.arrayBuffer()))
             const predictions = await model.classify(img);
