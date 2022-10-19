@@ -42,9 +42,13 @@ const {
     createWorker
 } = require('tesseract.js');
 
+let worker ="";
+
+/*
 let worker = createWorker({
     cacheMethod: 'none'
 });
+*/
 
 
 let model = "";
@@ -53,26 +57,15 @@ let tesseractLoaded = false;
 //    const Tesseract = require('tesseract.js');
 async function load() {
 
-    await worker.load();
-    await worker.loadLanguage('eng');
-    await worker.initialize('eng');
-    tesseractLoaded = true;
+   // await worker.load();
+   // await worker.loadLanguage('eng');
+  //  await worker.initialize('eng');
+ //   tesseractLoaded = true;
+    
     model = await mobilenet.load();
 
-        tesseractLoaded = false;
-        await worker.terminate();
 
-        worker = createWorker({
-            cacheMethod: 'none'
-        });
-
-        await worker.load();
-        await worker.loadLanguage('eng');
-        await worker.initialize('eng');
-        tesseractLoaded = true;
-  
-
-
+ 
 }
 
 load();
