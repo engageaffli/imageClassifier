@@ -200,7 +200,7 @@ async function start() {
     // URL as input
     app.get('/ocr', (req, res) => {
         const image_url = req.query.url;
-        const worker = createWorker();
+        const worker = createWorker({cacheMethod: 'none'});
         (async () => {
            await worker.load();
            await worker.loadLanguage('eng');
@@ -219,7 +219,7 @@ async function start() {
     // URL or Base64 as input
     app.post('/ocr', (req, res) => {
         const image_url = req.body.url;
-        const worker = createWorker();
+        const worker = createWorker({cacheMethod: 'none'});
         (async () => {
             await worker.load();
             await worker.loadLanguage('eng');
