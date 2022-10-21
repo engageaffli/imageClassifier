@@ -42,7 +42,7 @@ const {
     createWorker
 } = require('tesseract.js');
 
-let worker ="";
+let worker = "";
 
 /*
 let worker = createWorker({
@@ -57,15 +57,15 @@ let tesseractLoaded = false;
 //    const Tesseract = require('tesseract.js');
 async function load() {
 
-   // await worker.load();
-   // await worker.loadLanguage('eng');
-  //  await worker.initialize('eng');
- //   tesseractLoaded = true;
-    
+    // await worker.load();
+    // await worker.loadLanguage('eng');
+    //  await worker.initialize('eng');
+    //   tesseractLoaded = true;
+
     model = await mobilenet.load();
 
 
- 
+
 }
 
 load();
@@ -140,7 +140,7 @@ async function fetchData(url) {
             });
 
             res.on("end", () => {
-               // console.log(body);
+                // console.log(body);
 
                 return resolve(body);
             });
@@ -238,8 +238,8 @@ async function uploadModelsToDatabase(url) {
             console.log(remoteModelUrl);
             let remoteModelJson = await fetchData(remoteModelUrl);
             remoteModelJson = remoteModelJson.trim();
-            if(!remoteModelJson){
-                continue;   
+            if (!remoteModelJson) {
+                continue;
             }
             remoteModelJson = remoteModelJson.replaceAll('""', '"');
 
@@ -415,6 +415,10 @@ app.post('/', async (req, res) => {
 // Post request to get the results using trained model
 // Description and Base64 as Input
 app.post('/mlPredict', async (req, res) => {
+
+    if (!model) {
+        model = await mobilenet.load();
+    }
 
     let classifier = knnClassifier.create();
 
@@ -805,7 +809,7 @@ app.get('/updateModelsToGitHub', async (req, res) => {
                 for (let i = 0; i < result.length; i++) {
                     githubModels.set(result[i].name.replace(".txt", ""), result[i].sha);
                 }
-               console.log(githubModels);
+                console.log(githubModels);
                 resolve();
 
             })
@@ -816,7 +820,7 @@ app.get('/updateModelsToGitHub', async (req, res) => {
             });
 
     });
-   
+
 
 
     //Fetch the models from database
@@ -841,7 +845,7 @@ app.get('/updateModelsToGitHub', async (req, res) => {
         });
     })
 
- console.log(dbModels);
+    console.log(dbModels);
 
     //For each model, get the json from db and update to github 
     let modelsMap = new Map();
@@ -861,21 +865,21 @@ app.get('/updateModelsToGitHub', async (req, res) => {
                 if (err) throw err;
 
                 let data = null;
-                 
 
-                 if (githubModels.has(description)) {
+
+                if (githubModels.has(description)) {
                     data = JSON.stringify({
-                    message: "txt file",
-                    content: base64.encode(result.rows[0].model),
-                    sha: githubModels.get(description)
+                        message: "txt file",
+                        content: base64.encode(result.rows[0].model),
+                        sha: githubModels.get(description)
                     });
-                }else {
-                   data = JSON.stringify({
-                    message: "txt file",
-                    content: base64.encode(result.rows[0].model)
+                } else {
+                    data = JSON.stringify({
+                        message: "txt file",
+                        content: base64.encode(result.rows[0].model)
                     });
-                 }
- 
+                }
+
 
                 let config = {
                     method: "PUT",
@@ -891,54 +895,54 @@ app.get('/updateModelsToGitHub', async (req, res) => {
                 await new Promise((resolve, reject) => {
                     axios(config)
                         .then(function(response) {
-                         //  console.log(response);
+                            //  console.log(response);
                             resolve();
                         })
                         .catch(function(error) {
                             console.log(error);
-                      resolve();
+                            resolve();
                         });
                 });
                 client.end();
                 resolve();
             });
-            
+
         })
-       modelsMap.set(description, encodeURI("https://raw.githubusercontent.com/engageaffli/Models/main/" + description + ".txt"));
-       
+        modelsMap.set(description, encodeURI("https://raw.githubusercontent.com/engageaffli/Models/main/" + description + ".txt"));
+
     }
-      let obj = Object.fromEntries(modelsMap); 
-      let jsonString = JSON.stringify(obj);
+    let obj = Object.fromEntries(modelsMap);
+    let jsonString = JSON.stringify(obj);
 
-     let data = JSON.stringify({
-                    message: "txt file",
-                    content: base64.encode(jsonString),
-                    sha: githubModels.get("models.json")
-                    });
+    let data = JSON.stringify({
+        message: "txt file",
+        content: base64.encode(jsonString),
+        sha: githubModels.get("models.json")
+    });
 
-     config = {
-                    method: "PUT",
-                    url: "https://api.github.com/repos/engageaffli/Models/contents/models.json",
-                    headers: {
-                        Authorization: `Bearer ${TOKEN}`,
-                        "Content-Type": "application/json",
-                    },
-                    data: data,
-                };
+    config = {
+        method: "PUT",
+        url: "https://api.github.com/repos/engageaffli/Models/contents/models.json",
+        headers: {
+            Authorization: `Bearer ${TOKEN}`,
+            "Content-Type": "application/json",
+        },
+        data: data,
+    };
 
-        await new Promise((resolve, reject) => {
-                    axios(config)
-                        .then(function(response) {
-                         //  console.log(response);
-                            resolve();
-                        })
-                        .catch(function(error) {
-                            console.log(error);
-                      resolve();
-                        });
+    await new Promise((resolve, reject) => {
+        axios(config)
+            .then(function(response) {
+                //  console.log(response);
+                resolve();
+            })
+            .catch(function(error) {
+                console.log(error);
+                resolve();
             });
+    });
 
- 
+
 
 })
 
