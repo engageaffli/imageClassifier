@@ -61,25 +61,25 @@ async function start() {
     client.connect();
 
 
-    client.query('CREATE TABLE IF NOT EXISTS images_table ( base64_image TEXT , description VARCHAR(255), CONSTRAINT PK_image PRIMARY KEY (base64_image));', (err, res) => {
+    await client.query('CREATE TABLE IF NOT EXISTS images_table ( base64_image TEXT , description VARCHAR(255), CONSTRAINT PK_image PRIMARY KEY (base64_image));', (err, res) => {
         if (err) throw err;
         console.log("Table Created");
     });
 
 
-    client.query('CREATE TABLE IF NOT EXISTS models_table ( description VARCHAR(255) , model TEXT, CONSTRAINT PK_description PRIMARY KEY (description));', (err, res) => {
+    await client.query('CREATE TABLE IF NOT EXISTS models_table ( description VARCHAR(255) , model TEXT, CONSTRAINT PK_description PRIMARY KEY (description));', (err, res) => {
         if (err) throw err;
         console.log("Table Created");
     });
 
 
-    client.query('DELETE FROM images_table a using images_table b where a.description < b.description AND a.base64_image=b.base64_image', (err, res) => {
+    await client.query('DELETE FROM images_table a using images_table b where a.description < b.description AND a.base64_image=b.base64_image', (err, res) => {
         if (err) throw err;
         console.log("Duplicates Deleted");
     });
 
 
-    client.query('ALTER TABLE images_table DROP constraint IF EXISTS PK_image;', (err, res) => {
+    await client.query('ALTER TABLE images_table DROP constraint IF EXISTS PK_image;', (err, res) => {
         if (err) throw err;
 
         client.end();
@@ -88,11 +88,11 @@ async function start() {
 
 
     async function fetchData(url) {
-       
-        const https = require('https');
-      return await new Promise((resolve, reject) => {
 
-            https.get(url,(res) => {
+        const https = require('https');
+        return await new Promise((resolve, reject) => {
+
+            https.get(url, (res) => {
                 let body = "";
 
                 res.on("data", (chunk) => {
@@ -104,33 +104,33 @@ async function start() {
                     return resolve(body);
                 });
 
-           }).on("error", (error) => {
+            }).on("error", (error) => {
                 console.error(error.message);
-           });
+            });
 
-       });
-    } 
+        });
+    }
 
 
     //Upload all models to database
-    async function uploadModelsToDatabase(url){
+    async function uploadModelsToDatabase(url) {
 
         //Fetch the data from Github
-        let remoteModels = []; 
+        let remoteModels = [];
 
         let response = await fetchData(url);
-        response=response.trim();
-        let json = JSON.parse(response); 
-        remoteModels = Object.keys(json); 
-        
+        response = response.trim();
+        let json = JSON.parse(response);
+        remoteModels = Object.keys(json);
 
-       //Fetch the models from database 
-       let dbModels = new Set();
-       let client = new Client({
-                connectionString: process.env.DATABASE_URL,
-                ssl: {
-                    rejectUnauthorized: false
-                }
+
+        //Fetch the models from database 
+        let dbModels = new Set();
+        let client = new Client({
+            connectionString: process.env.DATABASE_URL,
+            ssl: {
+                rejectUnauthorized: false
+            }
         });
 
         client.connect();
@@ -138,24 +138,24 @@ async function start() {
         await new Promise((resolve, reject) => {
             client.query("SELECT description from models_table;", (err, result) => {
                 if (err) throw err;
-                for(let row of result.rows) {
-                  dbModels.add(row.description);
+                for (let row of result.rows) {
+                    dbModels.add(row.description);
                 }
                 client.end();
                 resolve(result);
             });
-       })
+        })
 
 
-       for(let i=0;i<remoteModels.length;i++){
-           if(!dbModels.has(remoteModels[i])){
-               //Fetch the model from remote url
-               let remoteModelUrl = json[remoteModels[i]];
-               let remoteModelJson = await fetchData(remoteModelUrl);
-               remoteModelJson = remoteModelJson.trim();
-               remoteModelJson = remoteModelJson.replaceAll('""', '"');
+        for (let i = 0; i < remoteModels.length; i++) {
+            if (!dbModels.has(remoteModels[i])) {
+                //Fetch the model from remote url
+                let remoteModelUrl = json[remoteModels[i]];
+                let remoteModelJson = await fetchData(remoteModelUrl);
+                remoteModelJson = remoteModelJson.trim();
+                remoteModelJson = remoteModelJson.replaceAll('""', '"');
 
-               //Store the data to database
+                //Store the data to database
                 let client = new Client({
                     connectionString: process.env.DATABASE_URL,
                     ssl: {
@@ -166,33 +166,33 @@ async function start() {
                 client.connect();
 
                 await new Promise((resolve, reject) => {
-                    client.query("INSERT INTO models_table(description, model) VALUES('" + remoteModels[i] + "', '" + remoteModelJson + "');", (err, result) => { 
+                    client.query("INSERT INTO models_table(description, model) VALUES('" + remoteModels[i] + "', '" + remoteModelJson + "');", (err, result) => {
                         if (err) throw err;
                         client.end();
                         resolve(result);
                     });
                 })
- 
-           }
 
-       }
+            }
 
-    } 
+        }
+
+    }
 
 
     //Update every hour for any new models in remote url
-   // setInterval(function(){
-        uploadModelsToDatabase("https://raw.githubusercontent.com/engageaffli/Models/main/models.json");
-  //  },3600000);
+    // setInterval(function(){
+    uploadModelsToDatabase("https://raw.githubusercontent.com/engageaffli/Models/main/models.json");
+    //  },3600000);
 
-  
+
     //Load model from a custom url
     app.get('/uploadModel', (req, res) => {
 
-     uploadModelsToDatabase(req.query.url);
-     res.send("Model update is in progress. Please use the model after a minute").end();
+        uploadModelsToDatabase(req.query.url);
+        res.send("Model update is in progress. Please use the model after a minute").end();
 
-   })
+    })
 
 
 
@@ -200,38 +200,39 @@ async function start() {
     // URL as input
     app.get('/ocr', async (req, res) => {
         const image_url = req.query.url;
-        const worker = await createWorker({cacheMethod: 'none'});
-        (async () => {
-           await worker.load();
-           await worker.loadLanguage('eng');
-           await worker.initialize('eng');
-            const {
-                data: {
-                    text
-                }
-            } = await worker.recognize(image_url);
-            await worker.terminate();
-            res.send(text.trim()).end();
-        })();
+        const worker = await createWorker({
+            cacheMethod: 'none'
+        });
+        await worker.load();
+        await worker.loadLanguage('eng');
+        await worker.initialize('eng');
+        const {
+            data: {
+                text
+            }
+        } = await worker.recognize(image_url);
+        await worker.terminate();
+        res.send(text.trim()).end();
+
     })
 
     // Post Request to path /ocr uses Tesseract
     // URL or Base64 as input
     app.post('/ocr', async (req, res) => {
         const image_url = req.body.url;
-        const worker = await createWorker({cacheMethod: 'none'});
-        (async () => {
-            await worker.load();
-            await worker.loadLanguage('eng');
-            await worker.initialize('eng');
-            const {
-                data: {
-                    text
-                }
-            } = await worker.recognize(image_url);
-            await worker.terminate();
-            res.send(text.trim()).end();
-        })();
+        const worker = await createWorker({
+            cacheMethod: 'none'
+        });
+        await worker.load();
+        await worker.loadLanguage('eng');
+        await worker.initialize('eng');
+        const {
+            data: {
+                text
+            }
+        } = await worker.recognize(image_url);
+        await worker.terminate();
+        res.send(text.trim()).end();
     })
 
     // Get Request to root / uses MobileNet Model to classify the image 
@@ -337,18 +338,18 @@ async function start() {
             if (!modelExists) {
                 res.send("Model does not exist").end()
             } else {
-               let labels = []; 
-                for(let i=0;i<images.length;i++){
+                let labels = [];
+                for (let i = 0; i < images.length; i++) {
                     let img = await tfnode.node.decodeImage(Buffer.from(images[i].replace(/^data:image\/\w+;base64,/, ""), 'base64'))
                     let logits = await model.infer(img, 'conv_preds');
                     let predictions = await classifier.predictClass(logits);
                     labels.push(predictions.label);
                     tfnode.dispose(img);
                 }
-               res.send(labels).end(); 
+                res.send(labels).end();
             }
 
-        classifier.dispose();
+            classifier.dispose();
 
         } catch (err) {
             console.log(err);
@@ -504,7 +505,7 @@ async function start() {
             res.send("Exception occured while processing the request").end();
         }
     })
- 
+
 
     // Delete Images based on description 
     app.get('/deleteImages', async (req, res) => {
@@ -545,7 +546,7 @@ async function start() {
         let classifier = knnClassifier.create();
         request = "";
 
-       res.send("Images are being trained").end();
+        res.send("Images are being trained").end();
 
         try {
             // Create the classifier
@@ -575,16 +576,16 @@ async function start() {
             })
 
 
-            for(let i=0; i<images.length;i++) {
+            for (let i = 0; i < images.length; i++) {
 
                 let img = await tfnode.node.decodeImage(Buffer.from(images[i].replace(/^data:image\/\w+;base64,/, ""), 'base64'))
                 let logits = await model.infer(img, 'conv_preds');
 
                 var answer = "";
-                if(answers[i] == 1){
-                   answer = "Y";
-                }else{
-                   answer = "N";
+                if (answers[i] == 1) {
+                    answer = "Y";
+                } else {
+                    answer = "N";
                 }
 
                 //Predict the image and store the weight only if it cannot recognize
@@ -593,14 +594,14 @@ async function start() {
                     let label = predictions.label;
                     if (label != answer) {
                         classifier.addExample(logits, answer);
-                      // console.log("labels are not equal"); 
+                        // console.log("labels are not equal"); 
                     } else {
-                       //   console.log("Weights already calculated");
+                        //   console.log("Weights already calculated");
                         //  console.log(predictions);
                     }
                 } else {
-                  
-                   await classifier.addExample(logits, answer);
+
+                    await classifier.addExample(logits, answer);
                 }
 
 
@@ -639,7 +640,7 @@ async function start() {
 
             }
 
-        classifier.dispose();
+            classifier.dispose();
 
         } catch (err) {
             console.log(err);
@@ -658,7 +659,7 @@ async function start() {
             // Create the classifier
             let modelExists = false;
             let classifier = knnClassifier.create();
- 
+
             // Load the model if it already exists
             let client = new Client({
                 connectionString: process.env.DATABASE_URL,
@@ -705,21 +706,21 @@ async function start() {
                         //Predict the image and store the weight only if it cannot recognize
                         //console.log(logits);
 
-/*
-                        if (classifier.getNumClasses() > 0) {
-                            let predictions = await classifier.predictClass(logits);
-                            let score = predictions.confidences[req.query.description];
-                            if (score != 1) {
-                                classifier.addExample(logits, req.query.description);
-                                console.log("score is::" + score);
-                            } else {
-                                //  console.log("Weights already calculated");
-                                //   console.log(predictions);
-                            }
-                        } else {
-*/
-                            classifier.addExample(logits, req.query.description);
-                   //     }
+                        /*
+                                                if (classifier.getNumClasses() > 0) {
+                                                    let predictions = await classifier.predictClass(logits);
+                                                    let score = predictions.confidences[req.query.description];
+                                                    if (score != 1) {
+                                                        classifier.addExample(logits, req.query.description);
+                                                        console.log("score is::" + score);
+                                                    } else {
+                                                        //  console.log("Weights already calculated");
+                                                        //   console.log(predictions);
+                                                    }
+                                                } else {
+                        */
+                        classifier.addExample(logits, req.query.description);
+                        //     }
                         tfnode.dispose(img);
                     }
 
@@ -760,7 +761,7 @@ async function start() {
                 }
 
             }
-         classifier.dispose();
+            classifier.dispose();
 
 
         } catch (err) {
