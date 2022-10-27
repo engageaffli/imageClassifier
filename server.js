@@ -198,9 +198,9 @@ async function start() {
 
     // Get Request to path /ocr uses Tesseract 
     // URL as input
-    app.get('/ocr', (req, res) => {
+    app.get('/ocr', async (req, res) => {
         const image_url = req.query.url;
-        const worker = createWorker({cacheMethod: 'none'});
+        const worker = await createWorker({cacheMethod: 'none'});
         (async () => {
            await worker.load();
            await worker.loadLanguage('eng');
@@ -217,9 +217,9 @@ async function start() {
 
     // Post Request to path /ocr uses Tesseract
     // URL or Base64 as input
-    app.post('/ocr', (req, res) => {
+    app.post('/ocr', async (req, res) => {
         const image_url = req.body.url;
-        const worker = createWorker({cacheMethod: 'none'});
+        const worker = await createWorker({cacheMethod: 'none'});
         (async () => {
             await worker.load();
             await worker.loadLanguage('eng');
