@@ -365,6 +365,12 @@ app.post('/mlPredict', async (req, res) => {
 
 
         req.body.input = JSON.parse(req.body.input);
+        
+        if(!req.body.input.description || req.body.input.description == undefined || req.body.input.description == "undefined") {
+              res.send("Model does not exist").end();
+              classifier.dispose();
+              return;
+        }
 
         //Dynamic loading of model based on description
         //If model exists in database, predict the image
