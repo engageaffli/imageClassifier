@@ -363,11 +363,11 @@ app.post('/mlPredict', async (req, res) => {
 
 
         req.body.input = JSON.parse(req.body.input);
-        
-        if(!req.body.input.description || req.body.input.description == undefined || req.body.input.description == "undefined") {
-              res.send("Model does not exist").end();
-              classifier.dispose();
-              return;
+
+        if (!req.body.input.description || req.body.input.description == undefined || req.body.input.description == "undefined") {
+            res.send("Model does not exist").end();
+            classifier.dispose();
+            return;
         }
 
         //Dynamic loading of model based on description
@@ -611,13 +611,21 @@ app.get('/deleteImages', async (req, res) => {
 // Description and Image as Input
 app.post('/trainImages', async (req, res) => {
 
-    let request = JSON.parse(req.body.input);
-    let classifier = knnClassifier.create();
-    req.body.input = "";
-
     res.send("Images are being trained").end();
 
+    let classifier = knnClassifier.create();
+
     try {
+
+        req.body.input = JSON.parse(req.body.input);
+
+        if (!req.body.input.description || req.body.input.description == undefined || req.body.input.description == "undefined") {
+            res.send("Model does not exist").end();
+            classifier.dispose();
+            return;
+        }
+
+
         let modelExists = false;
 
         // Load the model if it already exists
@@ -631,7 +639,7 @@ app.post('/trainImages', async (req, res) => {
         client.connect();
 
         await new Promise((resolve, reject) => {
-            client.query("SELECT model from models_table where description='" + request.description + "' limit 1;", (err, result) => {
+            client.query("SELECT model from models_table where description='" + req.body.input.description + "' limit 1;", (err, result) => {
                 if (err) throw err;
                 for (let row of result.rows) {
                     modelExists = true;
@@ -644,13 +652,13 @@ app.post('/trainImages', async (req, res) => {
         })
 
 
-        for (let i = 0; i < request.images.length; i++) {
+        for (let i = 0; i < req.body.input.images.length; i++) {
 
-            let img = await tfnode.node.decodeImage(Buffer.from(request.images[i].replace(/^data:image\/\w+;base64,/, ""), 'base64'))
+            let img = await tfnode.node.decodeImage(Buffer.from(req.body.input.images[i].replace(/^data:image\/\w+;base64,/, ""), 'base64'))
             let logits = await model.infer(img, 'conv_preds');
 
             var answer = "";
-            if (request.answers[i] == 1) {
+            if (req.body.input.answers[i] == 1) {
                 answer = "Y";
             } else {
                 answer = "N";
@@ -692,14 +700,14 @@ app.post('/trainImages', async (req, res) => {
             //If Model already exists in database, update the table else insert
             if (modelExists) {
 
-                client.query("UPDATE models_table SET model='" + jsonStr + "' where description='" + request.description + "';", (err, res) => {
+                client.query("UPDATE models_table SET model='" + jsonStr + "' where description='" + req.body.input.description + "';", (err, res) => {
                     if (err) throw err;
                     client.end();
                 });
 
             } else {
 
-                client.query("INSERT INTO models_table(description, model) VALUES('" + request.description + "', '" + jsonStr + "');", (err, res) => {
+                client.query("INSERT INTO models_table(description, model) VALUES('" + req.body.input.description + "', '" + jsonStr + "');", (err, res) => {
                     if (err) throw err;
                     client.end();
                 });
