@@ -38,23 +38,14 @@ const base64 = require('base-64');
 const https = require('https');
 
 
-const {
-    createWorker
-} = require('tesseract.js');
 
-let worker = "";
-
-/*
-let worker = createWorker({
-    cacheMethod: 'none'
-});
 */
 
 
 let model = "";
 let tesseractLoaded = false;
 
-//    const Tesseract = require('tesseract.js');
+
 async function load() {
 
     // await worker.load();
@@ -283,58 +274,6 @@ app.get('/uploadModel', (req, res) => {
 
 })
 
-
-
-// Get Request to path /ocr uses Tesseract 
-// URL as input
-app.post('/ocrTest', async (req, res) => {
-
-    let response = await postData("https://bustling-aeolian-gourd.glitch.me/ocr", "url=" + encodeURIComponent(req.body.url));
-    //console.log(response);
-    res.send(response.trim());
-
-
-})
-
-
-// Post Request to path /ocr uses Tesseract
-// URL or Base64 as input
-app.post('/ocr', async (req, res) => {
-
-    // let worker = createWorker({
-    //          cacheMethod: 'none'
-    //    });
-
-    if (!tesseractLoaded) {
-
-        res.send("-1").end();
-        console.log("Tesseract not loaded");
-        return;
-
-    }
-
-
-    try {
-
-
-        //   await worker.load();
-        //  await worker.loadLanguage('eng');
-        //  await worker.initialize('eng');
-
-        let {
-            data: {
-                text
-            }
-        } = await worker.recognize(req.body.url);
-        res.send(text.trim()).end();
-
-        // worker.terminate();
-    } catch (err) {
-        console.log(err);
-        res.send("-1").end();
-        //worker.terminate();
-    }
-})
 
 
 /*
