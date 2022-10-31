@@ -620,7 +620,6 @@ app.post('/trainImages', async (req, res) => {
         req.body.input = JSON.parse(req.body.input);
 
         if (!req.body.input.description || req.body.input.description == undefined || req.body.input.description == "undefined") {
-            res.send("Model does not exist").end();
             classifier.dispose();
             return;
         }
