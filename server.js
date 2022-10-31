@@ -39,8 +39,6 @@ const https = require('https');
 
 
 
-*/
-
 
 let model = "";
 let tesseractLoaded = false;
