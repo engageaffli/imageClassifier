@@ -66,7 +66,7 @@ console.log('Models Loaded');
 
 const app = express();
 app.use(bodyParser.urlencoded({
-    limit: '5mb',
+    limit: '10mb',
     extended: true
 }));
 
