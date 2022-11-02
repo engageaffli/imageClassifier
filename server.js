@@ -36,7 +36,43 @@ const knnClassifier = require('@tensorflow-models/knn-classifier');
 const axios = require('axios');
 const base64 = require('base-64');
 const https = require('https');
+const LRU = require('lru-cache');
 
+const options = {
+    max: 5,
+
+    // for use with tracking overall storage size
+    maxSize: 6,
+    sizeCalculation: (value, key) => {
+        return 1
+    },
+
+    // for use when you need to clean up something when objects
+    // are evicted from the cache
+    dispose: (value, key) => {
+        freeFromMemoryOrWhatever(value)
+    },
+
+    // how long to live in ms
+    ttl: 1000 * 60 * 5,
+
+    // return stale items before removing from cache?
+    allowStale: false,
+
+    updateAgeOnGet: false,
+    updateAgeOnHas: false,
+
+    // async method to use for cache.fetch(), for
+    // stale-while-revalidate type of behavior
+    fetchMethod: async (key, staleValue, {
+        options,
+        signal
+    }) => {}
+}
+
+
+
+const cache = new LRU(options)
 
 
 
@@ -375,27 +411,35 @@ app.post('/mlPredict', async (req, res) => {
         // Create the classifier
         let modelExists = false;
 
-        // Load the model if it already exists
-        let client = new Client({
-            connectionString: process.env.DATABASE_URL,
-            ssl: {
-                rejectUnauthorized: false
-            }
-        });
+        // Check if the model exists in cache
+        if (cache.has(req.body.input.description)) {
+            modelExists = true;
+            classifier.setClassifierDataset(Object.fromEntries(JSON.parse(cache.get(req.body.input.description)).map(([label, data, shape]) => [label, tfnode.tensor(data, shape)])));
+        } else {
 
-        client.connect();
-
-        await new Promise((resolve, reject) => {
-            client.query("SELECT model from models_table where description='" + req.body.input.description + "' limit 1;", (err, result) => {
-                if (err) throw err;
-                if (result && result.rows && result.rows.length > 0) {
-                    modelExists = true;
-                    classifier.setClassifierDataset(Object.fromEntries(JSON.parse(result.rows[0].model).map(([label, data, shape]) => [label, tfnode.tensor(data, shape)])));
+            // Load the model if it already exists
+            let client = new Client({
+                connectionString: process.env.DATABASE_URL,
+                ssl: {
+                    rejectUnauthorized: false
                 }
-                client.end();
-                resolve();
             });
-        })
+
+            client.connect();
+
+            await new Promise((resolve, reject) => {
+                client.query("SELECT model from models_table where description='" + req.body.input.description + "' limit 1;", (err, result) => {
+                    if (err) throw err;
+                    if (result && result.rows && result.rows.length > 0) {
+                        modelExists = true;
+                        cache.set(req.body.input.description, result.rows[0].model);
+                        classifier.setClassifierDataset(Object.fromEntries(JSON.parse(result.rows[0].model).map(([label, data, shape]) => [label, tfnode.tensor(data, shape)])));
+                    }
+                    client.end();
+                    resolve();
+                });
+            })
+        }
 
         if (!modelExists) {
             res.send("Model does not exist").end()
