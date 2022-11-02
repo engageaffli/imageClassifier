@@ -44,7 +44,6 @@ const options = { max: 5,
                   sizeCalculation: (value, key) => {
                       return 1
                   },
-               dispose: function (key, n) { n.close() },
                maxAge: 1000 * 60 * 60 }
 
 
