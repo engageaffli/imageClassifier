@@ -38,10 +38,15 @@ const base64 = require('base-64');
 const https = require('https');
 const LRU = require('lru-cache');
 
-const options = { max: 5
-              , length: function (n, key) { return n * 2 + key.length }
-              , dispose: function (key, n) { n.close() }
-              , maxAge: 1000 * 60 * 60 }
+const options = { max: 5,
+                   // for use with tracking overall storage size
+                  maxSize: 6,
+                  sizeCalculation: (value, key) => {
+                      return 1
+                  },
+               length: function (n, key) { return n * 2 + key.length },
+               dispose: function (key, n) { n.close() },
+               maxAge: 1000 * 60 * 60 }
 
 
 const cache = new LRU(options)
