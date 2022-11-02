@@ -389,6 +389,7 @@ app.post('/mlPredict', async (req, res) => {
         // Check if the model exists in cache
         if (cache.has(req.body.input.description)) {
             modelExists = true;
+            console.log("Model exists for " + req.body.input.description);
             classifier.setClassifierDataset(Object.fromEntries(JSON.parse(cache.get(req.body.input.description)).map(([label, data, shape]) => [label, tfnode.tensor(data, shape)])));
         } else {
 
