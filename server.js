@@ -5,7 +5,7 @@ Author: engageub
 */
 
 
-//const throng = require('throng')
+const throng = require('throng')
 
 // Defines the number of concurrent threads to run. 
 // Default is set to 1 if WEB_CONCURRENCY is not defined.
@@ -16,15 +16,15 @@ const TOKEN = process.env.TOKEN || 1;
 // Default port is set to 8080 if env.PORT is not defined.
 const PORT = process.env.PORT || 8080;
 
-/*
+
 throng({
     workers: WORKERS,
     lifetime: Infinity
 }, start)
 
-*/
 
-//async function start() {
+
+async function start() {
 
 // Load all the required assets/libraries 
 const express = require('express');
@@ -1046,4 +1046,4 @@ app.listen(PORT, () => {
 
 
 
-//}
+}
