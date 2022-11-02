@@ -38,38 +38,10 @@ const base64 = require('base-64');
 const https = require('https');
 const LRU = require('lru-cache');
 
-const options = {
-    max: 5,
-
-    // for use with tracking overall storage size
-    maxSize: 6,
-    sizeCalculation: (value, key) => {
-        return 1
-    },
-
-    // for use when you need to clean up something when objects
-    // are evicted from the cache
-    dispose: (value, key) => {
-        freeFromMemoryOrWhatever(value)
-    },
-
-    // how long to live in ms
-    ttl: 1000 * 60 * 5,
-
-    // return stale items before removing from cache?
-    allowStale: false,
-
-    updateAgeOnGet: false,
-    updateAgeOnHas: false,
-
-    // async method to use for cache.fetch(), for
-    // stale-while-revalidate type of behavior
-    fetchMethod: async (key, staleValue, {
-        options,
-        signal
-    }) => {}
-}
-
+const options = { max: 5
+              , length: function (n, key) { return n * 2 + key.length }
+              , dispose: function (key, n) { n.close() }
+              , maxAge: 1000 * 60 * 60 }
 
 
 const cache = new LRU(options)
