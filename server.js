@@ -402,7 +402,7 @@ app.post('/mlPredict', async (req, res) => {
         } else {
             let labels = [];
             for (let i = 0; i < req.body.input.images.length; i++) {
-                let img = await tfnode.node.decodeImage(Buffer.from(req.body.input.images[i].replace(/^data:image\/\w+;base64,/, ""), 'base64'));
+                let img = await tfnode.node.decodeImage(await Buffer.from(req.body.input.images[i].replace(/^data:image\/\w+;base64,/, ""), 'base64'));
                 try {
                     let logits = await model.infer(img, 'conv_preds');
                     let predictions = await classifier.predictClass(logits);
@@ -652,7 +652,7 @@ app.post('/trainImages', async (req, res) => {
 
         for (let i = 0; i < req.body.input.images.length; i++) {
 
-            let img = await tfnode.node.decodeImage(Buffer.from(req.body.input.images[i].replace(/^data:image\/\w+;base64,/, ""), 'base64'))
+            let img = await tfnode.node.decodeImage(await Buffer.from(req.body.input.images[i].replace(/^data:image\/\w+;base64,/, ""), 'base64'))
             let logits = await model.infer(img, 'conv_preds');
 
             var answer = "";
