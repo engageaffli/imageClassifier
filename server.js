@@ -40,7 +40,7 @@ async function start() {
     const LRU = require('lru-cache');
 
     const options = {
-        max: CACHE_MAXSIZE,
+        max: CACHE_MAX,
         // for use with tracking overall storage size
         maxSize: CACHE_MAXSIZE,
         sizeCalculation: (value, key) => {
