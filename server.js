@@ -37,9 +37,9 @@ async function start() {
     const LRU = require('lru-cache');
 
     const options = {
-        max: 5,
+        max: process.env.CACHE_MAX || 5,
         // for use with tracking overall storage size
-        maxSize: 6,
+        maxSize: process.env.CACHE_MAXSIZE || 6,
         sizeCalculation: (value, key) => {
             return 1
         },
@@ -86,28 +86,28 @@ async function start() {
     });
 
 
-    client.connect();
+    await client.connect();
 
 
-    client.query('CREATE TABLE IF NOT EXISTS images_table ( base64_image TEXT , description VARCHAR(255), CONSTRAINT PK_image PRIMARY KEY (base64_image));', (err, res) => {
+    await client.query('CREATE TABLE IF NOT EXISTS images_table ( base64_image TEXT , description VARCHAR(255), CONSTRAINT PK_image PRIMARY KEY (base64_image));', (err, res) => {
         if (err) throw err;
         console.log("Table Created");
     });
 
 
-    client.query('CREATE TABLE IF NOT EXISTS models_table ( description VARCHAR(255) , model TEXT, CONSTRAINT PK_description PRIMARY KEY (description));', (err, res) => {
+    await client.query('CREATE TABLE IF NOT EXISTS models_table ( description VARCHAR(255) , model TEXT, CONSTRAINT PK_description PRIMARY KEY (description));', (err, res) => {
         if (err) throw err;
         console.log("Table Created");
     });
 
 
-    client.query('DELETE FROM images_table a using images_table b where a.description < b.description AND a.base64_image=b.base64_image', (err, res) => {
+    await client.query('DELETE FROM images_table a using images_table b where a.description < b.description AND a.base64_image=b.base64_image', (err, res) => {
         if (err) throw err;
         console.log("Duplicates Deleted");
     });
 
 
-    client.query('ALTER TABLE images_table DROP constraint IF EXISTS PK_image;', (err, res) => {
+    await client.query('ALTER TABLE images_table DROP constraint IF EXISTS PK_image;', (err, res) => {
         if (err) throw err;
 
         client.end();
