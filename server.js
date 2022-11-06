@@ -13,6 +13,9 @@ const TOKEN = process.env.TOKEN || 1;
 
 // Default port is set to 8080 if env.PORT is not defined.
 const PORT = process.env.PORT || 8080;
+const CACHE_MAX = process.env.CACHE_MAX || 5;
+const CACHE_MAXSIZE = process.env.CACHE_MAXSIZE || 6;
+
 
 
 throng({
@@ -37,9 +40,9 @@ async function start() {
     const LRU = require('lru-cache');
 
     const options = {
-        max: process.env.CACHE_MAX || 5,
+        max: CACHE_MAXSIZE,
         // for use with tracking overall storage size
-        maxSize: process.env.CACHE_MAXSIZE || 6,
+        maxSize: CACHE_MAXSIZE,
         sizeCalculation: (value, key) => {
             return 1
         },
