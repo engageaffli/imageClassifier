@@ -13,8 +13,8 @@ const TOKEN = process.env.TOKEN || 1;
 
 // Default port is set to 8080 if env.PORT is not defined.
 const PORT = process.env.PORT || 8080;
-const CACHE_MAX = process.env.CACHE_MAX || 5;
-const CACHE_MAXSIZE = process.env.CACHE_MAXSIZE || 6;
+const CACHE_MAX = parseInt(process.env.CACHE_MAX) || 5;
+const CACHE_MAXSIZE = parseInt(process.env.CACHE_MAXSIZE) || 6;
 
 
 
