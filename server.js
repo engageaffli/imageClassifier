@@ -91,29 +91,36 @@ async function start() {
 
     await client.connect();
 
-
-    await client.query('CREATE TABLE IF NOT EXISTS images_table ( base64_image TEXT , description VARCHAR(255), CONSTRAINT PK_image PRIMARY KEY (base64_image));', (err, res) => {
-        if (err) throw err;
-        console.log("Table Created");
+    await new Promise((resolve, reject) => {
+        client.query('CREATE TABLE IF NOT EXISTS images_table ( base64_image TEXT , description VARCHAR(255), CONSTRAINT PK_image PRIMARY KEY (base64_image));', (err, res) => {
+            if (err) throw err;
+            console.log("Table Created");
+            resolve();
+        });
     });
 
-
-    await client.query('CREATE TABLE IF NOT EXISTS models_table ( description VARCHAR(255) , model TEXT, CONSTRAINT PK_description PRIMARY KEY (description));', (err, res) => {
-        if (err) throw err;
-        console.log("Table Created");
+    await new Promise((resolve, reject) => {
+        client.query('CREATE TABLE IF NOT EXISTS models_table ( description VARCHAR(255) , model TEXT, CONSTRAINT PK_description PRIMARY KEY (description));', (err, res) => {
+            if (err) throw err;
+            console.log("Table Created");
+            resolve();
+        });
     });
 
-
-    await client.query('DELETE FROM images_table a using images_table b where a.description < b.description AND a.base64_image=b.base64_image', (err, res) => {
-        if (err) throw err;
-        console.log("Duplicates Deleted");
+    await new Promise((resolve, reject) => {
+        client.query('DELETE FROM images_table a using images_table b where a.description < b.description AND a.base64_image=b.base64_image', (err, res) => {
+            if (err) throw err;
+            console.log("Duplicates Deleted");
+            resolve();
+        });
     });
 
-
-    await client.query('ALTER TABLE images_table DROP constraint IF EXISTS PK_image;', (err, res) => {
-        if (err) throw err;
-
-        client.end();
+    await new Promise((resolve, reject) => {
+        client.query('ALTER TABLE images_table DROP constraint IF EXISTS PK_image;', (err, res) => {
+            if (err) throw err;
+            client.end();
+            resolve();
+        });
     });
 
 
