@@ -368,10 +368,9 @@ async function start() {
         }
 
         let classifier = knnClassifier.create();
+        let base64Image = "";
 
         try {
-
-
             req.body.input = JSON.parse(req.body.input);
 
             if (!req.body.input.description || req.body.input.description == undefined || req.body.input.description == "undefined") {
@@ -421,17 +420,14 @@ async function start() {
             } else {
                 let labels = [];
                 for (let i = 0; i < req.body.input.images.length; i++) {
-                    let img = await tfnode.node.decodeImage(await Buffer.from(req.body.input.images[i].replace(/^data:image\/\w+;base64,/, ""), 'base64'));
-                    try {
-                        let logits = await model.infer(img, 'conv_preds');
-                        let predictions = await classifier.predictClass(logits);
-                        labels.push(predictions.label);
-                        tfnode.dispose(img);
-                    } catch (err) {
-                        console.log(err);
-                        tfnode.dispose(img);
-                        throw err;
-                    }
+                    base64Image = req.body.input.images[i].replace(/^data:image\/\w+;base64,/, "");
+                    let imageBuffer = await Buffer.from(base64Image, 'base64');         
+                    let img = await tfnode.node.decodeImage(imageBuffer);
+                    imageBuffer = "";
+                    let logits = await model.infer(img, 'conv_preds');
+                    let predictions = await classifier.predictClass(logits);
+                    labels.push(predictions.label);
+                    tfnode.dispose(img);
                 }
                 res.send(labels).end();
             }
@@ -440,6 +436,7 @@ async function start() {
             tfnode.disposeVariables();
 
         } catch (err) {
+            console.log(base64Image);
             console.log(err);
             classifier.dispose();
             tfnode.disposeVariables();
@@ -636,6 +633,7 @@ async function start() {
         }
 
         let classifier = knnClassifier.create();
+        let base64Image = "";
 
         try {
 
@@ -674,9 +672,12 @@ async function start() {
 
 
             for (let i = 0; i < req.body.input.images.length; i++) {
-
-                let img = await tfnode.node.decodeImage(await Buffer.from(req.body.input.images[i].replace(/^data:image\/\w+;base64,/, ""), 'base64'))
+                base64Image = req.body.input.images[i].replace(/^data:image\/\w+;base64,/, "");
+                let imageBuffer = await Buffer.from(base64Image, 'base64');         
+                let img = await tfnode.node.decodeImage(imageBuffer);
+                imageBuffer = "";
                 let logits = await model.infer(img, 'conv_preds');
+                tfnode.dispose(img);
 
                 var answer = "";
                 if (req.body.input.answers[i] == 1) {
@@ -701,8 +702,6 @@ async function start() {
                     await classifier.addExample(logits, answer);
                 }
 
-
-                await tfnode.dispose(img);
             }
 
             //Store the classifier data to database
@@ -743,6 +742,7 @@ async function start() {
             tfnode.disposeVariables();
 
         } catch (err) {
+            console.log(base64Image);
             console.log(err);
             //res.send("Exception occured while processing the request").end();
             classifier.dispose();
