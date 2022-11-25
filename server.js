@@ -424,7 +424,7 @@ async function start() {
                     let imageBuffer = await Buffer.from(base64Image, 'base64');         
                     let img = await tfnode.node.decodeImage(imageBuffer);
                     imageBuffer = "";
-                    let logits = await model.infer(img, 'conv_preds');
+                    let logits = await model.infer(img, true);
                     let predictions = await classifier.predictClass(logits);
                     labels.push(predictions.label);
                     tfnode.dispose(img);
@@ -762,7 +762,7 @@ async function start() {
                 let imageBuffer = await Buffer.from(base64Image, 'base64');         
                 let img = await tfnode.node.decodeImage(imageBuffer);
                 imageBuffer = "";
-                let logits = await model.infer(img, 'conv_preds');
+                let logits = await model.infer(img, true);
                 tfnode.dispose(img);
 
                 var answer = "";
@@ -1057,7 +1057,7 @@ async function start() {
                     if (err) throw err;
                     for (let row of result.rows) {
                         let img = await tfnode.node.decodeImage(Buffer.from(row.base64_image.replace(/^data:image\/\w+;base64,/, ""), 'base64'))
-                        let logits = await model.infer(img, 'conv_preds');
+                        let logits = await model.infer(img, true);
 
                         //Predict the image and store the weight only if it cannot recognize
                         //console.log(logits);
