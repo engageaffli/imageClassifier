@@ -443,6 +443,92 @@ async function start() {
             res.send("An exception occured while processing the request").end();
         }
     })
+    
+    
+      // Post request to get the results using trained model
+    // Description and Base64 as Input
+    app.post('/mlPredictTest', async (req, res) => {
+
+        if (!model) {
+            model = await mobilenet.load();
+        }
+
+        let classifier = knnClassifier.create();
+        let base64Image = "";
+
+        try {
+            req.body.input = JSON.parse(req.body.input);
+
+            if (!req.body.input.description || req.body.input.description == undefined || req.body.input.description == "undefined") {
+                res.send("Model does not exist").end();
+                classifier.dispose();
+                return;
+            }
+
+            //Dynamic loading of model based on description
+            //If model exists in database, predict the image
+
+            // Create the classifier
+            let modelExists = false;
+
+            // Check if the model exists in cache
+            if (cache.has(req.body.input.description)) {
+                modelExists = true;
+                classifier.setClassifierDataset(Object.fromEntries(JSON.parse(cache.get(req.body.input.description)).map(([label, data, shape]) => [label, tfnode.tensor(data, shape)])));
+            } else {
+
+                // Load the model if it already exists
+                let client = new Client({
+                    connectionString: process.env.DATABASE_URL,
+                    ssl: {
+                        rejectUnauthorized: false
+                    }
+                });
+
+                client.connect();
+
+                await new Promise((resolve, reject) => {
+                    client.query("SELECT model from models_table where description='" + req.body.input.description + "' limit 1;", (err, result) => {
+                        if (err) throw err;
+                        if (result && result.rows && result.rows.length > 0) {
+                            modelExists = true;
+                            cache.set(req.body.input.description, result.rows[0].model);
+                            classifier.setClassifierDataset(Object.fromEntries(JSON.parse(result.rows[0].model).map(([label, data, shape]) => [label, tfnode.tensor(data, shape)])));
+                        }
+                        client.end();
+                        resolve();
+                    });
+                })
+            }
+
+            if (!modelExists) {
+                res.send("Model does not exist").end()
+            } else {
+                let labels = [];
+                for (let i = 0; i < req.body.input.images.length; i++) {
+                    base64Image = req.body.input.images[i].replace(/^data:image\/\w+;base64,/, "");
+                    let imageBuffer = await Buffer.from(base64Image, 'base64');         
+                    let img = await tfnode.node.decodeImage(imageBuffer);
+                    imageBuffer = "";
+                    let logits = await model.infer(img, true);
+                    let predictions = await classifier.predictClass(logits);
+                    labels.push(predictions.label);
+                    tfnode.dispose(img);
+                }
+                res.send(labels).end();
+            }
+
+            classifier.dispose();
+            tfnode.disposeVariables();
+
+        } catch (err) {
+            console.log(base64Image);
+            console.log(err);
+            classifier.dispose();
+            tfnode.disposeVariables();
+            res.send("An exception occured while processing the request").end();
+        }
+    })
 
 
     // Post request to retrieve image description from database
