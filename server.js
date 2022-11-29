@@ -118,7 +118,7 @@ async function start() {
     await new Promise((resolve, reject) => {
         client.query('ALTER TABLE images_table DROP constraint IF EXISTS PK_image;', (err, res) => {
             if (err) throw err;
-            client.end();
+           // client.end();
             resolve();
         });
     });
@@ -392,6 +392,7 @@ async function start() {
             } else {
 
                 // Load the model if it already exists
+                /*
                 let client = new Client({
                     connectionString: process.env.DATABASE_URL,
                     ssl: {
@@ -400,6 +401,7 @@ async function start() {
                 });
 
                 client.connect();
+                */
 
                 await new Promise((resolve, reject) => {
                     client.query("SELECT model from models_table where description='" + req.body.input.description + "' limit 1;", (err, result) => {
@@ -409,7 +411,7 @@ async function start() {
                             cache.set(req.body.input.description, result.rows[0].model);
                             classifier.setClassifierDataset(Object.fromEntries(JSON.parse(result.rows[0].model).map(([label, data, shape]) => [label, tfnode.tensor(data, shape)])));
                         }
-                        client.end();
+                      //  client.end();
                         resolve();
                     });
                 })
@@ -734,6 +736,7 @@ async function start() {
             let modelExists = false;
 
             // Load the model if it already exists
+            /*
             let client = new Client({
                 connectionString: process.env.DATABASE_URL,
                 ssl: {
@@ -742,6 +745,7 @@ async function start() {
             });
 
             client.connect();
+            */
 
             await new Promise((resolve, reject) => {
                 client.query("SELECT model from models_table where description='" + req.body.input.description + "' limit 1;", (err, result) => {
@@ -751,7 +755,7 @@ async function start() {
                         classifier.setClassifierDataset(Object.fromEntries(JSON.parse(row.model).map(([label, data, shape]) => [label, tfnode.tensor(data, shape)])));
                         break;
                     }
-                    client.end();
+                    //client.end();
                     resolve(result);
                 });
             })
@@ -796,6 +800,7 @@ async function start() {
             cache.set(req.body.input.description, jsonStr);
 
             if (jsonStr) {
+                /*
                 client = new Client({
                     connectionString: process.env.DATABASE_URL,
                     ssl: {
@@ -804,20 +809,21 @@ async function start() {
                 });
 
                 client.connect();
+                */
 
                 //If Model already exists in database, update the table else insert
                 if (modelExists) {
 
                     client.query("UPDATE models_table SET model='" + jsonStr + "' where description='" + req.body.input.description + "';", (err, res) => {
                         if (err) throw err;
-                        client.end();
+                    //    client.end();
                     });
 
                 } else {
 
                     client.query("INSERT INTO models_table(description, model) VALUES('" + req.body.input.description + "', '" + jsonStr + "');", (err, res) => {
                         if (err) throw err;
-                        client.end();
+                  //      client.end();
                     });
 
                 }
