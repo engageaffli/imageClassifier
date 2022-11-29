@@ -875,6 +875,7 @@ async function start() {
 
             axios(config)
                 .then(function(response) {
+                    console.log(response);
                     let result = response.data;
                     for (let i = 0; i < result.length; i++) {
                         githubModels.set(result[i].name.replace(".txt", ""), result[i].sha);
@@ -884,7 +885,7 @@ async function start() {
 
                 })
                 .catch(function(error) {
-                  //  console.log(error);
+                    console.log(error);
                     resolve();
                     return;
                 });
