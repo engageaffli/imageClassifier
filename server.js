@@ -875,12 +875,12 @@ async function start() {
 
             axios(config)
                 .then(function(response) {
-                    console.log(response);
+                  //  console.log(response);
                     let result = response.data;
                     for (let i = 0; i < result.length; i++) {
                         githubModels.set(result[i].name.replace(".txt", ""), result[i].sha);
                     }
-                    console.log(githubModels);
+                    //console.log(githubModels);
                     resolve();
 
                 })
@@ -918,7 +918,7 @@ async function start() {
             });
         })
 
-        console.log(dbModels);
+     //   console.log(dbModels);
 
         //For each model, get the json from db and update to github 
         let modelsMap = new Map();
@@ -1008,7 +1008,7 @@ async function start() {
         await new Promise((resolve, reject) => {
             axios(config)
                 .then(function(response) {
-                      console.log(response);
+                //      console.log(response);
                     resolve();
                 })
                 .catch(function(error) {
@@ -1026,6 +1026,7 @@ async function start() {
     app.get('/trainImages', async (req, res) => {
 
         res.send("Training the images for description: " + req.query.description).end();
+        return;
         try {
             // Create the classifier
             let modelExists = false;
