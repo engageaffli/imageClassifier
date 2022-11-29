@@ -884,7 +884,7 @@ async function start() {
 
                 })
                 .catch(function(error) {
-                    console.log(error);
+                  //  console.log(error);
                     resolve();
                     return;
                 });
@@ -969,11 +969,11 @@ async function start() {
                     await new Promise((resolve, reject) => {
                         axios(config)
                             .then(function(response) {
-                                //  console.log(response);
+                                // console.log(response);
                                 resolve();
                             })
                             .catch(function(error) {
-                                console.log(error);
+                               // console.log(error);
                                 resolve();
                             });
                     });
@@ -1007,7 +1007,7 @@ async function start() {
         await new Promise((resolve, reject) => {
             axios(config)
                 .then(function(response) {
-                    //  console.log(response);
+                      console.log(response);
                     resolve();
                 })
                 .catch(function(error) {
