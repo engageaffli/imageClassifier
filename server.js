@@ -891,6 +891,7 @@ async function start() {
 
         //Fetch the models from database
         let dbModels = new Set();
+        /*
         let client = new Client({
             connectionString: process.env.DATABASE_URL,
             ssl: {
@@ -899,6 +900,7 @@ async function start() {
         });
 
         client.connect();
+        */
 
         await new Promise((resolve, reject) => {
             client.query("SELECT description from models_table;", (err, result) => {
@@ -906,7 +908,7 @@ async function start() {
                 for (let row of result.rows) {
                     dbModels.add(row.description);
                 }
-                client.end();
+            //    client.end();
                 resolve();
             });
         })
@@ -917,6 +919,7 @@ async function start() {
         let modelsMap = new Map();
         for (let description of dbModels) {
 
+            /*
             client = new Client({
                 connectionString: process.env.DATABASE_URL,
                 ssl: {
@@ -925,6 +928,7 @@ async function start() {
             });
 
             client.connect();
+            */
 
             await new Promise((resolve, reject) => {
                 client.query("SELECT model from models_table where description='" + description + "';", async (err, result) => {
@@ -969,7 +973,7 @@ async function start() {
                                 resolve();
                             });
                     });
-                    client.end();
+                  //  client.end();
                     resolve();
                 });
 
