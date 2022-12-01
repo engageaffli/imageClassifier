@@ -466,7 +466,7 @@ async function getTensor(imagePath) {
                     }
                 }
                 const outShape = [imageData.height, imageData.width, numChannels];
-                const tensor = await tf.tensor3d(values, outShape, 'int32');
+                const tensor = await tfnode.tensor3d(values, outShape, 'int32');
                 return resolve(tensor);
             } catch (err) {
                 console.log(err);
