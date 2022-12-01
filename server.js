@@ -38,6 +38,7 @@ async function start() {
     const base64 = require('base-64');
     const https = require('https');
     const LRU = require('lru-cache');
+    const image = require('get-image-data');
 
     const options = {
         max: CACHE_MAX,
@@ -60,8 +61,6 @@ async function start() {
 
 
     model = await mobilenet.load();
-
-
 
 
     // Load the models for mobilenet and cocossd
@@ -451,6 +450,29 @@ async function start() {
     })
     
     
+async function getTensor(imagePath) {
+    var tensor = "";
+    await new Promise((resolve, reject) => {
+        image(imagePath, async (err, imageData) => {
+            // pre-process image
+            const numChannels = 3;
+            const numPixels = imageData.width * imageData.height;
+            const values = new Int32Array(numPixels * numChannels);
+            const pixels = imageData.data;
+            for (let i = 0; i < numPixels; i++) {
+                for (let channel = 0; channel < numChannels; ++channel) {
+                    values[i * numChannels + channel] = pixels[i * 4 + channel];
+                }
+            }
+            const outShape = [imageData.height, imageData.width, numChannels];
+            tensor = await tf.tensor3d(values, outShape, 'int32');
+            resolve();
+        })
+    })
+    return tensor;
+}
+    
+    
       // Post request to get the results using trained model
     // Description and Base64 as Input
     app.post('/mlPredictTest', async (req, res) => {
@@ -513,9 +535,9 @@ async function start() {
                 let labels = [];
                 for (let i = 0; i < req.body.input.images.length; i++) {
                     base64Image = req.body.input.images[i].replace(/^data:image\/\w+;base64,/, "");
-                    let imageBuffer = await Buffer.from(base64Image, 'base64');         
-                    let img = await tfnode.node.decodeImage(imageBuffer);
-                    imageBuffer = "";
+                  //  let imageBuffer = await Buffer.from(base64Image, 'base64');         
+                    let img = await getTensor(base64Image);
+                   // imageBuffer = "";
                     let logits = await model.infer(img, true);
                     let predictions = await classifier.predictClass(logits);
                     labels.push(predictions.label);
