@@ -426,9 +426,10 @@ async function start() {
                 let labels = [];
                 for (let i = 0; i < req.body.input.images.length; i++) {
                     base64Image = req.body.input.images[i].replace(/^data:image\/\w+;base64,/, "");
-                    let imageBuffer = await Buffer.from(base64Image, 'base64');         
-                    let img = await tfnode.node.decodeImage(imageBuffer);
-                    imageBuffer = "";
+                   // let imageBuffer = await Buffer.from(base64Image, 'base64');         
+                  //  let img = await tfnode.node.decodeImage(imageBuffer);
+                //    imageBuffer = "";
+                    let img = await getTensor(base64Image);
                     let logits = await model.infer(img, true);
                     let predictions = await classifier.predictClass(logits);
                     labels.push(predictions.label);
@@ -793,9 +794,10 @@ async function getTensor(imagePath) {
 
             for (let i = 0; i < req.body.input.images.length; i++) {
                 base64Image = req.body.input.images[i].replace(/^data:image\/\w+;base64,/, "");
-                let imageBuffer = await Buffer.from(base64Image, 'base64');         
-                let img = await tfnode.node.decodeImage(imageBuffer);
-                imageBuffer = "";
+                //let imageBuffer = await Buffer.from(base64Image, 'base64');         
+               // let img = await tfnode.node.decodeImage(imageBuffer);
+              //  imageBuffer = "";
+                let img = await getTensor(base64Image);
                 let logits = await model.infer(img, true);
                 tfnode.dispose(img);
 
