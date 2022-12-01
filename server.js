@@ -451,25 +451,29 @@ async function start() {
     
     
 async function getTensor(imagePath) {
-    var tensor = "";
-    await new Promise((resolve, reject) => {
-        image(imagePath, async (err, imageData) => {
-            // pre-process image
-            const numChannels = 3;
-            const numPixels = imageData.width * imageData.height;
-            const values = new Int32Array(numPixels * numChannels);
-            const pixels = imageData.data;
-            for (let i = 0; i < numPixels; i++) {
-                for (let channel = 0; channel < numChannels; ++channel) {
-                    values[i * numChannels + channel] = pixels[i * 4 + channel];
+    var imageBuffer = await Buffer.from(imagePath, 'base64');
+    return await new Promise((resolve, reject) => {
+        image(imageBuffer, async (err, imageData) => {
+            try {
+                // pre-process image
+                const numChannels = 3;
+                const numPixels = imageData.width * imageData.height;
+                const values = new Int32Array(numPixels * numChannels);
+                const pixels = imageData.data;
+                for (let i = 0; i < numPixels; i++) {
+                    for (let channel = 0; channel < numChannels; ++channel) {
+                        values[i * numChannels + channel] = pixels[i * 4 + channel];
+                    }
                 }
+                const outShape = [imageData.height, imageData.width, numChannels];
+                const tensor = await tf.tensor3d(values, outShape, 'int32');
+                return resolve(tensor);
+            } catch (err) {
+                console.log(err);
+                resolve();
             }
-            const outShape = [imageData.height, imageData.width, numChannels];
-            tensor = await tf.tensor3d(values, outShape, 'int32');
-            resolve();
         })
     })
-    return tensor;
 }
     
     
