@@ -364,6 +364,9 @@ async function start() {
 
     // Post request to get the results using trained model
     // Description and Base64 as Input
+    // Storing the values to null when not used to save space when using multiple threads
+    // Using the image function directly since javascript copies the object when passed through function
+    // Not creating a separate function for image since it requires clearing up the tensor again
     app.post('/mlPredict', async (req, res) => {
 
         if (!model) {
@@ -418,6 +421,7 @@ async function start() {
                     await new Promise((resolve, reject) => {
                         image(imageBuffer, async (err, imageData) => {
                             try {
+                                imageBuffer = "";                             
                                 // pre-process image
                                 let numChannels = 3;
                                 let numPixels = imageData.width * imageData.height;
@@ -428,8 +432,10 @@ async function start() {
                                         values[i * numChannels + channel] = pixels[i * 4 + channel];
                                     }
                                 }
+                                pixels = "";
                                 let outShape = [imageData.height, imageData.width, numChannels];
                                 let img = await tfnode.tensor3d(values, outShape, 'int32');
+                                values = "";
                                 let logits = await model.infer(img, true);
                                 let predictions = await classifier.predictClass(logits);
                                 labels.push(predictions.label);
@@ -758,7 +764,6 @@ async function getTensor(imagePath) {
         }
 
         let classifier = knnClassifier.create();
-        let base64Image = "";
 
         try {
 
@@ -799,41 +804,67 @@ async function getTensor(imagePath) {
 
 
             for (let i = 0; i < req.body.input.images.length; i++) {
-                base64Image = req.body.input.images[i].replace(/^data:image\/\w+;base64,/, "");
-                //let imageBuffer = await Buffer.from(base64Image, 'base64');         
-               // let img = await tfnode.node.decodeImage(imageBuffer);
-              //  imageBuffer = "";
-                let img = await getTensor(base64Image);
-                let logits = await model.infer(img, true);
-                tfnode.dispose(img);
+                req.body.input.images[i] = req.body.input.images[i].replace(/^data:image\/\w+;base64,/, "");
+                let imageBuffer = await Buffer.from(req.body.input.images[i], 'base64');
+                req.body.input.images[i] = "";
+                await new Promise((resolve, reject) => {
+                    image(imageBuffer, async (err, imageData) => {
+                        try {
+                            imageBuffer = "";
+                            // pre-process image
+                            let numChannels = 3;
+                            let numPixels = imageData.width * imageData.height;
+                            let values = new Int32Array(numPixels * numChannels);
+                            let pixels = imageData.data;
+                            for (let i = 0; i < numPixels; i++) {
+                                for (let channel = 0; channel < numChannels; ++channel) {
+                                    values[i * numChannels + channel] = pixels[i * 4 + channel];
+                                }
+                            }
+                            pixels = "";
+                            let outShape = [imageData.height, imageData.width, numChannels];
+                            let img = await tfnode.tensor3d(values, outShape, 'int32');
+                            values = "";
+                            let logits = await model.infer(img, true);
+                            tfnode.dispose(img);
 
-                var answer = "";
-                if (req.body.input.answers[i] == 1) {
-                    answer = "Y";
-                } else {
-                    answer = "N";
-                }
+                            var answer = "";
+                            if (req.body.input.answers[i] == 1) {
+                                answer = "Y";
+                            } else {
+                                answer = "N";
+                            }
 
-                //Predict the image and store the weight only if it cannot recognize
-                if (classifier.getNumClasses() > 0) {
-                    let predictions = await classifier.predictClass(logits);
-                    let label = predictions.label;
-                    if (label != answer) {
-                        classifier.addExample(logits, answer);
-                        // console.log("labels are not equal"); 
-                    } else {
-                        //   console.log("Weights already calculated");
-                        //  console.log(predictions);
-                    }
-                } else {
+                            //Predict the image and store the weight only if it cannot recognize
+                            if (classifier.getNumClasses() > 0) {
+                                let predictions = await classifier.predictClass(logits);
+                                let label = predictions.label;
+                                if (label != answer) {
+                                    classifier.addExample(logits, answer);
+                                    // console.log("labels are not equal"); 
+                                } else {
+                                    //   console.log("Weights already calculated");
+                                    //  console.log(predictions);
+                                }
+                            } else {
 
-                    await classifier.addExample(logits, answer);
-                }
+                                await classifier.addExample(logits, answer);
+                            }
+                            resolve();
+                        } catch (err) {
+                            console.log(err);
+                            resolve();
+                        }
+                    })
+                })
 
             }
 
             //Store the classifier data to database
             let jsonStr = JSON.stringify(Object.entries(classifier.getClassifierDataset()).map(([label, data]) => [label, Array.from(data.dataSync()), data.shape]));
+
+            classifier.dispose();
+            tfnode.disposeVariables();
 
             cache.set(req.body.input.description, jsonStr);
 
@@ -854,25 +885,21 @@ async function getTensor(imagePath) {
 
                     client.query("UPDATE models_table SET model='" + jsonStr + "' where description='" + req.body.input.description + "';", (err, res) => {
                         if (err) throw err;
-                    //    client.end();
+                        //    client.end();
                     });
 
                 } else {
 
                     client.query("INSERT INTO models_table(description, model) VALUES('" + req.body.input.description + "', '" + jsonStr + "');", (err, res) => {
                         if (err) throw err;
-                  //      client.end();
+                        //      client.end();
                     });
 
                 }
 
             }
-
-            classifier.dispose();
-            tfnode.disposeVariables();
-
+            
         } catch (err) {
-            console.log(base64Image);
             console.log(err);
             //res.send("Exception occured while processing the request").end();
             classifier.dispose();
