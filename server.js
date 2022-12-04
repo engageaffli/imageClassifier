@@ -371,7 +371,6 @@ async function start() {
         }
 
         let classifier = knnClassifier.create();
-        let base64Image = "";
 
         try {
             req.body.input = JSON.parse(req.body.input);
@@ -394,18 +393,6 @@ async function start() {
                 classifier.setClassifierDataset(Object.fromEntries(JSON.parse(cache.get(req.body.input.description)).map(([label, data, shape]) => [label, tfnode.tensor(data, shape)])));
             } else {
 
-                // Load the model if it already exists
-                /*
-                let client = new Client({
-                    connectionString: process.env.DATABASE_URL,
-                    ssl: {
-                        rejectUnauthorized: false
-                    }
-                });
-
-                client.connect();
-                */
-
                 await new Promise((resolve, reject) => {
                     client.query("SELECT model from models_table where description='" + req.body.input.description + "' limit 1;", (err, result) => {
                         if (err) throw err;
@@ -414,7 +401,7 @@ async function start() {
                             cache.set(req.body.input.description, result.rows[0].model);
                             classifier.setClassifierDataset(Object.fromEntries(JSON.parse(result.rows[0].model).map(([label, data, shape]) => [label, tfnode.tensor(data, shape)])));
                         }
-                      //  client.end();
+                        //  client.end();
                         resolve();
                     });
                 })
@@ -425,15 +412,35 @@ async function start() {
             } else {
                 let labels = [];
                 for (let i = 0; i < req.body.input.images.length; i++) {
-                    base64Image = req.body.input.images[i].replace(/^data:image\/\w+;base64,/, "");
-                   // let imageBuffer = await Buffer.from(base64Image, 'base64');         
-                  //  let img = await tfnode.node.decodeImage(imageBuffer);
-                //    imageBuffer = "";
-                    let img = await getTensor(base64Image);
-                    let logits = await model.infer(img, true);
-                    let predictions = await classifier.predictClass(logits);
-                    labels.push(predictions.label);
-                    tfnode.dispose(img);
+                    req.body.input.images[i] = req.body.input.images[i].replace(/^data:image\/\w+;base64,/, "");
+                    let imageBuffer = await Buffer.from(req.body.input.images[i], 'base64');
+                    req.body.input.images[i] = "";
+                    await new Promise((resolve, reject) => {
+                        image(imageBuffer, async (err, imageData) => {
+                            try {
+                                // pre-process image
+                                let numChannels = 3;
+                                let numPixels = imageData.width * imageData.height;
+                                let values = new Int32Array(numPixels * numChannels);
+                                let pixels = imageData.data;
+                                for (let i = 0; i < numPixels; i++) {
+                                    for (let channel = 0; channel < numChannels; ++channel) {
+                                        values[i * numChannels + channel] = pixels[i * 4 + channel];
+                                    }
+                                }
+                                let outShape = [imageData.height, imageData.width, numChannels];
+                                let img = await tfnode.tensor3d(values, outShape, 'int32');
+                                let logits = await model.infer(img, true);
+                                let predictions = await classifier.predictClass(logits);
+                                labels.push(predictions.label);
+                                tfnode.dispose(img);
+                                resolve();
+                            } catch (err) {
+                                console.log(err);
+                                resolve();
+                            }
+                        })
+                    })
                 }
                 res.send(labels).end();
             }
@@ -442,7 +449,6 @@ async function start() {
             tfnode.disposeVariables();
 
         } catch (err) {
-            console.log(base64Image);
             console.log(err);
             classifier.dispose();
             tfnode.disposeVariables();
