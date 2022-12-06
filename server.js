@@ -208,7 +208,7 @@ async function start() {
 
         //Fetch the models from database 
         let dbModels = new Set();
-        /*
+        
         let client = new Client({
             connectionString: process.env.DATABASE_URL,
             ssl: {
@@ -216,8 +216,8 @@ async function start() {
             }
         });
 
-        client.connect();
-        */
+        await client.connect();
+        
 
         await new Promise((resolve, reject) => {
             client.query("SELECT description from models_table;", (err, result) => {
@@ -225,7 +225,7 @@ async function start() {
                 for (let row of result.rows) {
                     dbModels.add(row.description);
                 }
-              //  client.end();
+                client.end();
                 resolve(result);
             });
         })
