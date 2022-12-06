@@ -244,7 +244,7 @@ async function start() {
                 remoteModelJson = remoteModelJson.replaceAll('""', '"');
 
                 //Store the data to database
-                /*
+                
                 let client = new Client({
                     connectionString: process.env.DATABASE_URL,
                     ssl: {
@@ -252,13 +252,13 @@ async function start() {
                     }
                 });
 
-                client.connect();
-                */
+                await client.connect();
+                
 
                 await new Promise((resolve, reject) => {
                     client.query("INSERT INTO models_table(description, model) VALUES('" + remoteModels[i] + "', '" + remoteModelJson + "');", (err, result) => {
                         if (err) throw err;
-                      //  client.end();
+                        client.end();
                         resolve();
                     });
                 })
