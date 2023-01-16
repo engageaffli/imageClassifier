@@ -191,6 +191,45 @@ async function start() {
 
         }
     }
+    
+    
+    // Copy from one postgres to other using select query
+    // Do not use this for large data, you may run out of memory if your RAM is not sufficient
+    async function copyToRemoteDatabase() {
+        let clientFrom = new Client({
+            connectionString: process.env.FROM_DATABASE_URL,
+            ssl: {
+                rejectUnauthorized: false
+            }
+        });
+        
+        let clientTo = new Client({
+            connectionString: process.env.TO_DATABASE_URL,
+            ssl: {
+                rejectUnauthorized: false
+            }
+        });
+
+        await clientFrom.connect();
+        await clientTo.connect();
+        
+        clientFrom.query("select description,base64_image from images_table;", (err, result) => {
+                if (err) throw err;
+                for (let row of result.rows) {
+                    // Insert into new database
+                    
+                     clientTo.query("INSERT INTO images_table(description, base64_image) VALUES('" + row.description + "', '" + row.base64_image + "');", (err, res) => {
+                        if (err) throw err;
+                        //clientTo.end();
+                    });
+                               
+                }
+              
+                clientFrom.end();
+            });
+        
+          
+    }
 
 
 
