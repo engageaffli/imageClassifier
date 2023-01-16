@@ -230,6 +230,13 @@ async function start() {
         
           
     }
+    
+    //Copy to remote Db
+    app.get('/copyToRemoteDatabase', (req, res) => {
+        res.send("Copying to Remote Database..").end();
+        copyToRemoteDatabase();
+
+    })
 
 
 
