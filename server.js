@@ -40,7 +40,7 @@ async function start() {
 
     const app = express();
     app.use(bodyParser.urlencoded({
-        limit: '10mb',
+        limit: '25mb',
         extended: true
     }));
 
