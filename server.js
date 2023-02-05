@@ -75,6 +75,13 @@ async function start() {
 
     //app.use(bodyParser.json());
 
+    // Added the following code based on this https://github.com/nodejs/help/issues/2155
+    app.use((err, req, res, next) => {
+    if (err && err.code === 'ECONNABORTED') {
+        res.status(400).end(); // Don't process this error any further to avoid its logging
+    } else
+        next(err);
+    });
 
     const {
         Client
