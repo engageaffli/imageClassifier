@@ -25,10 +25,6 @@ async function start() {
     const cocoSsd = require('@tensorflow-models/coco-ssd');
     const tfnode = require('@tensorflow/tfjs-node');
     const mobilenet = require('@tensorflow-models/mobilenet');
-
-    const {
-        createWorker
-    } = require('tesseract.js');
     const fetch = require('node-fetch');
 
 
