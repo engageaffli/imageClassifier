@@ -15,14 +15,11 @@
   "dependencies": {
     "@tensorflow-models/mobilenet": "^2.1.0",
     "@tensorflow-models/coco-ssd": "^2.2.2",   
-    "@tensorflow-models/knn-classifier": "^1.2.4",   
     "@tensorflow/tfjs-node": "^3.21.1",
     "body-parser": "^1.20.0",
-    "tesseract.js": "^4.0.0",
     "express": "^4.18.1",
     "express-http-context": "^1.2.4",
     "throng": "^4.0.0",
     "node-fetch": "^2.6.7",
-    "pg": "^8.7.3"
   }
 }
