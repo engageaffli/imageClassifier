@@ -76,7 +76,7 @@ async function start() {
     // Base64 as Input
     app.post('/mobilenet', async (req, res) => {
         try {
-            const img = await tfnode.node.decodeImage(Buffer.from(req.body.url, 'base64'))
+            const img = await tfnode.node.decodeImage(Buffer.from(req.body.url.replace(/^data:image\/\w+;base64,/, ""), 'base64'))
             const predictions = await model.classify(img);
             res.send(predictions).end();
             tfnode.dispose(img);
@@ -90,7 +90,7 @@ async function start() {
     // Base64 as Input
     app.post('/coco', async (req, res) => {
         try {
-            const img = await tfnode.node.decodeImage(Buffer.from(req.body.url, 'base64'))
+            const img = await tfnode.node.decodeImage(Buffer.from(req.body.url.replace(/^data:image\/\w+;base64,/, ""), 'base64'))
             const predictions = await cocoModel.detect(img);
             res.send(predictions).end();
             tfnode.dispose(img);
