@@ -26,7 +26,6 @@ async function start() {
     const tfnode = require('@tensorflow/tfjs-node');
     const mobilenet = require('@tensorflow-models/mobilenet');
     const toxicity = require('@tensorflow-models/toxicity');
-    const fetch = require('node-fetch');
 
 
     // Load the models for mobilenet and cocossd
@@ -41,36 +40,9 @@ async function start() {
     }));
 
 
-    // Get Request to root / uses MobileNet Model to classify the image 
-    // URL as input
-    app.get('/mobilenet', async (req, res) => {
-        try {
-            const result = await fetch(req.query.url);
-            const img = await tfnode.node.decodeImage(Buffer.from(await result.arrayBuffer()))
-            const predictions = await model.classify(img);
-            res.send(predictions).end();
-            tfnode.dispose(img);
-        } catch (err) {
-            console.log(err);
-            res.send("Exception occured while processing the request").end();
-        }
-
-    })
-
-    // Get Request to path /coco uses CocoSSD Model to classify the image
-    // URL as input
-    app.get('/coco', async (req, res) => {
-        try {
-            const result = await fetch(req.query.url);
-            const img = await tfnode.node.decodeImage(Buffer.from(await result.arrayBuffer()))
-            const predictions = await cocoModel.detect(img);
-            res.send(predictions).end();
-            tfnode.dispose(img);
-        } catch (err) {
-            console.log(err);
-            res.send("An exception occured while processing the request").end();
-        }
-
+    // Get Request to /ping to monitor website
+    app.get('/ping', async (req, res) => {
+       res.send("Website is up and running..").end();
     })
 
     // Post request to root / uses MobileNet Model to classify the image 
