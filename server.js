@@ -42,7 +42,7 @@ async function start() {
 
     // Get Request to /ping to monitor website
     app.get('/ping', async (req, res) => {
-       res.send("Website is up and running..").end();
+       res.status(200).send("Website is up and running..").end();
     })
 
     // Post request to root / uses MobileNet Model to classify the image 
