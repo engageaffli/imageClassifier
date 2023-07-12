@@ -39,6 +39,8 @@ async function start() {
         extended: true
     }));
 
+    app.disable('etag');
+
 
     // Get Request to /ping to monitor website
     app.get('/ping', async (req, res) => {
