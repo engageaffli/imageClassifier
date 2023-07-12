@@ -108,7 +108,6 @@ async function start() {
         try {         
             toxicity.load(threshold).then(model => {
                 model.classify(req.body.sentences).then(predictions => {
-                    console.log(req.body.sentences);
                     // `predictions` is an array of objects, one for each prediction head,
                     // that contains the raw probabilities for each input along with the
                     // final prediction in `match` (either `true` or `false`).
