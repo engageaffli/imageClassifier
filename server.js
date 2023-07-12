@@ -112,7 +112,7 @@ async function start() {
                     // that contains the raw probabilities for each input along with the
                     // final prediction in `match` (either `true` or `false`).
                     // If neither prediction exceeds the threshold, `match` is `null`.
-                    console.log(predictions);
+                    console.log(threshold);
                     res.send(predictions).end();
                })
             })
