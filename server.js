@@ -25,6 +25,7 @@ async function start() {
     const cocoSsd = require('@tensorflow-models/coco-ssd');
     const tfnode = require('@tensorflow/tfjs-node');
     const mobilenet = require('@tensorflow-models/mobilenet');
+    const toxicity = require('@tensorflow-models/toxicity');
     const fetch = require('node-fetch');
 
 
@@ -94,6 +95,27 @@ async function start() {
             const predictions = await cocoModel.detect(img);
             res.send(predictions).end();
             tfnode.dispose(img);
+        } catch (err) {
+            console.log(err);
+            res.send("An exception occured while processing the request").end();
+        }
+    })
+
+    // Post request to /toxicity path to get the results using toxicity model
+    // Array and threshold as Input
+    app.post('/toxicity', async (req, res) => {
+        const threshold = req.body.threshold ? req.body.threshold : 0.9;
+        try {         
+            toxicity.load(threshold).then(model => {
+                model.classify(req.body.sentences).then(predictions => {
+                    // `predictions` is an array of objects, one for each prediction head,
+                    // that contains the raw probabilities for each input along with the
+                    // final prediction in `match` (either `true` or `false`).
+                    // If neither prediction exceeds the threshold, `match` is `null`.
+                    console.log(predictions);
+                    res.send(predictions).end();
+               }
+            }
         } catch (err) {
             console.log(err);
             res.send("An exception occured while processing the request").end();
