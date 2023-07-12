@@ -114,8 +114,8 @@ async function start() {
                     // If neither prediction exceeds the threshold, `match` is `null`.
                     console.log(predictions);
                     res.send(predictions).end();
-               }
-            }
+               })
+            })
         } catch (err) {
             console.log(err);
             res.send("An exception occured while processing the request").end();
