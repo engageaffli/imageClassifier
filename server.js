@@ -25,12 +25,14 @@ async function start() {
     const cocoSsd = require('@tensorflow-models/coco-ssd');
     const tfnode = require('@tensorflow/tfjs-node');
     const mobilenet = require('@tensorflow-models/mobilenet');
+    const nsfwjs = require('nsfwjs';)
     const toxicity = require('@tensorflow-models/toxicity');
 
 
     // Load the models for mobilenet and cocossd
     const model = await mobilenet.load();
     const cocoModel = await cocoSsd.load();
+    const nsfwModel = await nsfwjs.load();
     console.log('Models Loaded');
 
     const app = express();
@@ -47,12 +49,26 @@ async function start() {
        res.status(200).send("Website is up and running..").end();
     })
 
-    // Post request to root / uses MobileNet Model to classify the image 
+    // Post request to /mobilenet uses MobileNet Model to classify the image 
     // Base64 as Input
     app.post('/mobilenet', async (req, res) => {
         try {
             const img = await tfnode.node.decodeImage(Buffer.from(req.body.url.replace(/^data:image\/\w+;base64,/, ""), 'base64'))
             const predictions = await model.classify(img);
+            res.send(predictions).end();
+            tfnode.dispose(img);
+        } catch (err) {
+            console.log(err);
+            res.send("Exception occured while processing the request").end();
+        }
+    })
+
+    // Post request to /nsfw uses Nsfwjs Model to classify the image 
+    // Base64 as Input
+    app.post('/nsfw', async (req, res) => {
+        try {
+            const img = await tfnode.node.decodeImage(Buffer.from(req.body.url.replace(/^data:image\/\w+;base64,/, ""), 'base64'))
+            const predictions = await nsfwModel.classify(img);
             res.send(predictions).end();
             tfnode.dispose(img);
         } catch (err) {
