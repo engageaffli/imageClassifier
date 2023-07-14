@@ -25,7 +25,7 @@ async function start() {
     const cocoSsd = require('@tensorflow-models/coco-ssd');
     const tfnode = require('@tensorflow/tfjs-node');
     const mobilenet = require('@tensorflow-models/mobilenet');
-    const nsfwjs = require('nsfwjs';)
+    const nsfwjs = require('nsfwjs')
     const toxicity = require('@tensorflow-models/toxicity');
 
 
