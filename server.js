@@ -29,13 +29,12 @@ async function start() {
     const toxicity = require('@tensorflow-models/toxicity');
     const poseDetection = require('@tensorflow-models/pose-detection');
     const movenetModel = poseDetection.SupportedModels.MoveNet;
-    const movenetDetector = await poseDetection.createDetector(movenetModel);
-
 
     // Load the models for mobilenet and cocossd
     const model = await mobilenet.load();
     const cocoModel = await cocoSsd.load();
     const nsfwModel = await nsfwjs.load();
+    const movenetDetector = await poseDetection.createDetector(movenetModel);
     console.log('Models Loaded');
 
     const app = express();
@@ -45,7 +44,6 @@ async function start() {
     }));
 
     app.disable('etag');
-
 
     // Get Request to /ping to monitor website
     app.get('/ping', async (req, res) => {
@@ -72,6 +70,20 @@ async function start() {
         try {
             const img = await tfnode.node.decodeImage(Buffer.from(req.body.url.replace(/^data:image\/\w+;base64,/, ""), 'base64'))
             const predictions = await nsfwModel.classify(img);
+            res.send(predictions).end();
+            tfnode.dispose(img);
+        } catch (err) {
+            console.log(err);
+            res.send("Exception occured while processing the request").end();
+        }
+    })
+
+    // Post request to /posemovenet uses movenet Model to classify the image 
+    // Base64 as Input
+    app.post('/posemovenet', async (req, res) => {
+        try {
+            const img = await tfnode.node.decodeImage(Buffer.from(req.body.url.replace(/^data:image\/\w+;base64,/, ""), 'base64'))
+            const predictions = await movenetDetector.estimatePoses(img);
             res.send(predictions).end();
             tfnode.dispose(img);
         } catch (err) {
