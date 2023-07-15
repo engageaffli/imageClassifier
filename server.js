@@ -27,6 +27,9 @@ async function start() {
     const mobilenet = require('@tensorflow-models/mobilenet');
     const nsfwjs = require('nsfwjs')
     const toxicity = require('@tensorflow-models/toxicity');
+    const poseDetection = require('@tensorflow-models/pose-detection');
+    const movenetModel = poseDetection.SupportedModels.MoveNet;
+    const movenetDetector = await poseDetection.createDetector(movenetModel);
 
 
     // Load the models for mobilenet and cocossd
