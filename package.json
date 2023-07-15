@@ -16,6 +16,7 @@
     "@tensorflow-models/mobilenet": "^2.1.0",
     "@tensorflow-models/coco-ssd": "^2.2.2",   
     "@tensorflow-models/toxicity": "^1.2.2",
+    "@tensorflow-models/pose-detection": "^2.1.0",
     "@tensorflow/tfjs-node": "^4.2.0",
     "nsfwjs": "^2.4.2",
     "body-parser": "^1.20.1",
