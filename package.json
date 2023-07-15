@@ -18,6 +18,7 @@
     "@tensorflow-models/toxicity": "^1.2.2",
     "@tensorflow-models/pose-detection": "^2.1.0",
     "@mediapipe/pose": "^0.5.1675469404",
+    "@tensorflow/tfjs-backend-webgpu": "4.8.0",
     "@tensorflow/tfjs-node": "^4.2.0",
     "nsfwjs": "^2.4.2",
     "body-parser": "^1.20.1",
