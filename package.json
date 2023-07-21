@@ -22,7 +22,6 @@
     "express": "^4.18.1",
     "express-http-context": "^1.2.4",
     "throng": "^4.0.0",
-    "node-fetch": "^2.6.7",
     "pg": "^8.7.3"
   }
 }
