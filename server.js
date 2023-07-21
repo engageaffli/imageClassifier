@@ -30,8 +30,6 @@ async function start() {
     const {
         createWorker
     } = require('tesseract.js');
-    const fetch = require('node-fetch');
-
 
     // Load the models for mobilenet and cocossd
     const model = await mobilenet.load();
