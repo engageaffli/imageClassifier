@@ -1037,7 +1037,7 @@ async function getTensor(imagePath) {
                 for (let row of result.rows) {
                     dbModels.add(row.description);
                 }
-         //       client.end();
+                client.end();
                 resolve();
             });
         })
@@ -1048,7 +1048,7 @@ async function getTensor(imagePath) {
         let modelsMap = new Map();
         for (let description of dbModels) {
 
-           /* 
+            
             client = new Client({
                 connectionString: process.env.DATABASE_URL,
                 ssl: {
@@ -1057,7 +1057,7 @@ async function getTensor(imagePath) {
             });
 
             await client.connect();
-            */
+            
 
             await new Promise((resolve, reject) => {
                 client.query("SELECT model from models_table where description='" + description + "';", async (err, result) => {
@@ -1098,11 +1098,11 @@ async function getTensor(imagePath) {
                                 resolve();
                             })
                             .catch(function(error) {
-                                console.log(error);
+                               // console.log(error);
                                 resolve();
                             });
                     });
-              //      client.end();
+                    client.end();
                     resolve();
                 });
 
@@ -1110,9 +1110,6 @@ async function getTensor(imagePath) {
             modelsMap.set(description, encodeURI("https://raw.githubusercontent.com/engageaffli/Models/main/" + description + ".txt"));
 
         }
-
-        client.end();
-        
         let obj = Object.fromEntries(modelsMap);
         let jsonString = JSON.stringify(obj);
 
