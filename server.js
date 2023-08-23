@@ -738,7 +738,7 @@ async function getTensor(imagePath) {
 
             client.connect();
 
-            client.query("SELECT DISTINCT description from models_table;", (err, result) => {
+            client.query("SELECT description from models_table;", (err, result) => {
                 if (err) throw err;
                 if (!result || result.rows.length == 0) {
                     res.send(" ").end();
