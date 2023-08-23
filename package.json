@@ -26,6 +26,6 @@
     "express-http-context": "^1.2.4",
     "get-image-data": "^5.0.0",
     "jimp": "^0.16.2",
-    "pg": "^8.7.3"
+    "pg": "^8.11.3"
   }
 }
