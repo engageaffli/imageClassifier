@@ -738,7 +738,7 @@ async function getTensor(imagePath) {
 
             client.connect();
 
-            client.query("SELECT DISTINCT description from images_table where (description LIKE '%Please%' OR description LIKE '%select%' OR description LIKE '%click%');", (err, result) => {
+            client.query("SELECT DISTINCT description from models_table;", (err, result) => {
                 if (err) throw err;
                 if (!result || result.rows.length == 0) {
                     res.send(" ").end();
