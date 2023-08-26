@@ -818,7 +818,7 @@ async function getTensor(imagePath) {
 
     // Post request to train images immediately 
     // Description and Image as Input
-    app.post('/trainImages', async (req, res) => {
+    app.post('/trainImagesTest', async (req, res) => {
 
         res.send("Images are being trained").end();
 
