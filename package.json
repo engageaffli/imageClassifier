@@ -8,18 +8,18 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "engines": {
-    "node": "^20.4.0"
+    "node": "20.6.0"
   },
   "author": "engageub",
   "license": "ISC",
   "dependencies": {
-    "@tensorflow-models/mobilenet": "^2.1.0",
+    "@tensorflow-models/mobilenet": "^2.1.1",
     "@tensorflow-models/coco-ssd": "^2.2.2",   
     "@tensorflow-models/toxicity": "^1.2.2",
     "@tensorflow-models/pose-detection": "^2.1.0",
     "@mediapipe/pose": "^0.5.1675469404",
     "@tensorflow/tfjs-backend-webgpu": "4.8.0",
-    "@tensorflow/tfjs-node": "^4.2.0",
+    "@tensorflow/tfjs-node": "^4.11.0",
     "nsfwjs": "^2.4.2",
     "body-parser": "^1.20.1",
     "express": "^4.18.1",
